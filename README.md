@@ -6,11 +6,10 @@ Copyright (C) 2025 The [The FreeBSD Foundation](https://freebsdfoundation.org/).
 Introduction
 ------------
 
-This is a WIP script to install KDE Plasma via bsdinstall.
-<https://github.com/FreeBSDFoundation/proj-laptop/issues/25>
+This is a WIP script to install KDE Plasma via bsdinstall:
+<https://github.com/FreeBSDFoundation/proj-laptop/issues/25>,
 for The FreeBSD Foundation's Laptop Support and Usability Project
 <https://github.com/FreeBSDFoundation/proj-laptop>.
-
 
 Screenshots
 -----------
