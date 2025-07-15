@@ -1,0 +1,83 @@
+#!/bin/sh
+#-
+# SPDX-License-Identifier: BSD-2-Clause
+#
+# Copyright (c) 2025 The FreeBSD Foundation
+#
+# This software was developed by Alfonso Sabato Siciliano
+# under sponsorship from the FreeBSD Foundation.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+readonly BSDDIALOG_OK=0
+readonly BSDDIALOG_YES=$BSDDIALOG_OK
+
+###
+# 1. Yes-No question: "Do you want to install KDE?"
+# 2. Radiolist GPU drivers, default item based on the output of fwget -n -q.
+# 3. Yes-No question: "Do you want install KDE Plasma?"
+# 4. Mixedgauge for installation progress: GPU driver, Xorg, KDE, and conf.
+# 5. Checklist to select user(s) to add to the video group.
+###
+
+# SECTION 0
+bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
+	--yesno "Do you want to set up a Graphical Desktop Environment?" 0 0
+rv=$? ; [ $rv -ne $BSDDIALOG_YES ] && exit $rv
+
+# SECTION 1: Graphic card
+HELPGPU="System firmware boot method: `sysctl -n machdep.bootmethod`
+GPU:
+`pciconf -lv | grep -A 4 vga`"
+
+gpu=$(bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
+	--ok-label Install --cancel-label Skip \
+	--hmsg  "$HELPGPU" --item-depth \
+	--radiolist "F1 to know your GPU, SPACE to select a driver:" 0 0 0 \
+	0 DRM           "Intel and AMD Metaport"                         off \
+	1 Intel         "Intel APUs starting with HD3000 / Sandy Bridge" off \
+	1 AMD           "AMD GPUs starting with HD7000 / Tahiti"         off \
+	1 Radeon        "Older AMD GPUs (EFI boot should be disabled)"   off \
+	0 NVIDIA        "Proprietary driver "                            off \
+	1 Optimus-Intel "Nvidia Optimus and Intel GPU"                   off \
+	1 Optimus-AMD   "Nvidia Optimus and AMD GPU"                     off \
+	0 VESA          "GPU not supported by other drivers (BIOS)"      off \
+	0 SCFB          "GPU not supported by other drivers (UEFI)"      off \
+	3>&1 1>&2 2>&3 3>&-)
+[ $? -ne $BSDDIALOG_OK ] && gpu=""
+
+# SECTION 3: installation
+
+bsddialog --sleep 5 --backtitle "FreeBSD Installer" --title "Desktop" \
+	--mixedgauge "\nInstallation 450/512 kscreen\n" 0 0 40 \
+	"" " -9" \
+	"GPU driver" " -6" \
+	"KDE installation" 35 \
+	"Configuration"	" -11 "
+
+
+bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
+	--ok-label Continue --cancel-label Skip \
+	--checklist 'Select the users to add to the "video" group to enable them to use the graphical environment.' 0 0 0 \
+	alice "Alice Crypto" off bob "Robert Protocol" off luigi "Luigi Plumber" on mario "Super Mario Bross" on zelda "Zelda, The Legend of" off
+
