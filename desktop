@@ -63,7 +63,9 @@ gpu=$(bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
 	0 VESA          "GPU not supported by other drivers (BIOS)"      off \
 	0 SCFB          "GPU not supported by other drivers (UEFI)"      off \
 	3>&1 1>&2 2>&3 3>&-)
-[ $? -ne $BSDDIALOG_OK ] && gpu=""
+rv=$?
+[ $rv -ne $BSDDIALOG_OK ] && exit $rv
+[ $gpu -eq "" ] && exit 0
 
 # SECTION 3: Installation
 bsddialog --sleep 5 --backtitle "FreeBSD Installer" --title "Desktop" \
