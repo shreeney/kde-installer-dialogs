@@ -35,7 +35,7 @@ readonly BSDDIALOG_YES=$BSDDIALOG_OK
 ###
 # 1. Yes-No question to install KDE.
 # 2. Radiolist GPU drivers, default item based on the output of fwget -n -q.
-# 3. Mixedgauge for installation progress: GPU driver, Xorg, KDE, and conf.
+# 3. Installation progress: GPU driver, Xorg, KDE, and conf.
 # 4. Checklist to select user(s) to add to the video group.
 ###
 
