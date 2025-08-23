@@ -63,9 +63,87 @@ gpu=$(bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
 	0 VESA          "GPU not supported by other drivers (BIOS)"      off \
 	0 SCFB          "GPU not supported by other drivers (UEFI)"      off \
 	3>&1 1>&2 2>&3 3>&-)
-rv=$?
-[ $rv -ne $BSDDIALOG_OK ] && exit $rv
-[ $gpu -eq "" ] && exit 0
+[ $? -ne $BSDDIALOG_OK ] && exit 1
+[ -z $gpu ] && exit 0
+
+toinstall=""
+postconfig=""
+
+case $gpu in
+	DRM )
+		toinstall="$toinstall graphics/drm-kmod"
+		postconfig="sysrc kld_list+=\" i915kms amdgpu radeonkms\""
+		;;
+	Optimus-Intel)
+		optimus=1
+		;&
+	Intel)
+		toinstall="$toinstall graphics/drm-kmod x11-drivers/xf86-video-intel"
+		postconfig="sysrc kld_list+=\" i915kms\""
+		;;
+	Optimus-AMD)
+		optimus=1
+		;&
+	AMD)
+		toinstall="$toinstall graphics/drm-kmod"
+		postconfig="sysrc kld_list+=\" amdgpu\""
+		;;
+	Radeon )
+		toinstall="$toinstall graphics/drm-kmod"
+		postconfig="sysrc kld_list+=\" radeonkms\""
+		;;
+	VESA)
+		toinstall="$toinstall x11-drivers/xf86-video-vesa"
+		postconfig="echo -e \"Section \\\"Device\\\"\n\tIdentifier \\\"Card0\\\"\n\tDriver \\\"vesa\\\"\nEndSection\" >> $XDRIVERFILE"
+		;;
+	SCFB)
+		toinstall="$toinstall x11-drivers/xf86-video-scfb"
+		postconfig="echo -e \"Section \\\"Device\\\"\n\tIdentifier \\\"Card0\\\"\n\tDriver \\\"scfb\\\"\nEndSection\" >> $XDRIVERFILE"
+		;;
+esac
+
+if [ $gpu == NVIDIA -o $optimus ]; then
+	items='Untested NVIDIA-550 "Proprietary driver version 550" off'
+	if [ $optimus ]; then
+		items="$items "'"" NVIDIA-390 "Proprietary driver version 390" off'
+	else
+		items="$items "'Untested NVIDIA-470 "Proprietary driver version 470" off'
+		items="$items "'"" NVIDIA-390 "Proprietary driver version 390" off'
+		items="$items "'Untested NVIDIA-340 "Proprietary driver version 340 (only PORT)" off'
+		items="$items "'Untested NVIDIA-304 "Proprietary driver version 304 (only PORT)" off'
+	fi
+	gpu=$(echo $items | xargs -o bsddialog --title "$TITLE" \
+		--ok-label Install --cancel-label Skip --hmsg "$HELPGPU" \
+		--item-prefix \
+		--radiolist "F1 to know your GPU, SPACE to select a driver:" \
+		0 0 0 \
+	3>&1 1>&2 2>&3 3>&-)
+	if [ $? -eq $BSDDIALOG_OK -a -n "$gpu" ]; then
+		version=${gpu##NVIDIA-}
+		if [ $version -eq 550 ]; then
+			toinstall="$toinstall x11/nvidia-driver"
+			if [ $optimus ]; then
+				toinstall="$toinstall x11/nvidia-hybrid-graphics"
+			fi
+		else
+			toinstall="$toinstall x11/nvidia-driver-$version"
+			if [ $optimus ]; then
+				toinstall="$toinstall x11/nvidia-hybrid-graphics-390"
+			fi
+		fi
+		if [ $version -le 340 ]; then
+			if [ $INSTALLFUNC == install_pkgs ]; then
+				$DIALOG --title "${TITLE}" --ok-label Quit \
+					--msgbox "The driver nvidia-driver-$version can be installed only via PORTS, restart $0 with -P option." 0 0
+				log "Cannot install nvidia-driver-$version via pkg, restart $0 with -P option"
+				exit $EXIT_FAILURE
+			fi
+			postconfig="sysrc kld_list+=\" nvidia\""
+		else
+			postconfig="$postconfig ; sysrc kld_list+=\" nvidia-modeset\""
+		fi
+	fi
+fi
 
 # SECTION 3: Installation
 bsddialog --sleep 5 --backtitle "FreeBSD Installer" --title "Desktop" \
