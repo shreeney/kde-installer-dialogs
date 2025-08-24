@@ -45,9 +45,16 @@ bsddialog --backtitle "FreeBSD Installer" --title "Desktop" --colors \
 [ $? -ne $BSDDIALOG_YES ] && exit 1
 
 # SECTION 2: Graphic card
-HELPGPU="System firmware boot method: `sysctl -n machdep.bootmethod`
+PKGGPU=`fwget -n -q | grep gpu`
+BOOTMETHOD=`sysctl -n machdep.bootmethod`
+# F1 help message
+HELPGPU="System firmware boot method: $BOOTMETHOD
+
 GPU:
-`pciconf -lv | grep -A 4 vga`"
+`pciconf -lv | grep -A 4 vga`
+
+Detected firmware package: $PKGGPU"
+# end F1 help message
 
 gpu=$(bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
 	--ok-label Install --cancel-label Skip \
