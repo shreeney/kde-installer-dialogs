@@ -153,6 +153,7 @@ bsddialog --sleep 5 --backtitle "FreeBSD Installer" --title "Desktop" \
 	"KDE installation" 35 \
 	"Configuration"	" -11 "
 
+# TODO: add installation and configuration progress bars
 
 # SECTION 4: Video group
 [ $gpu = VESA -o $gpu = SCFB ] && exit 0
@@ -164,3 +165,5 @@ USERS=$(echo ${users} | xargs -o bsddialog --backtitle "FreeBSD Installer" \
 	--title "Desktop" --ok-label Continue --cancel-label Skip \
 	--checklist 'Select users to add to the "video" group for 3D acceleration.' 0 0 0 2>&1 1>&5)
 exec 5>&-
+
+# TODO: add pw add to video group
