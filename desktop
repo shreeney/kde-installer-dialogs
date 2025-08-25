@@ -31,6 +31,7 @@
 
 readonly BSDDIALOG_OK=0
 readonly BSDDIALOG_YES=$BSDDIALOG_OK
+readonly BSDDIALOG_NO=1
 
 ####
 # 1. Yes-No question to install KDE.
@@ -141,7 +142,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 		fi
 		if [ $version -le 340 ]; then
 			if [ $INSTALLFUNC = install_pkgs ]; then
-				$DIALOG --title "${TITLE}" --ok-label Quit \
+				bsddialog --title "${TITLE}" --ok-label Quit \
 					--msgbox "The driver nvidia-driver-$version can be installed only via PORTS, restart $0 with -P option." 0 0
 				log "Cannot install nvidia-driver-$version via pkg, restart $0 with -P option"
 				exit $EXIT_FAILURE
@@ -154,18 +155,76 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 fi
 
 #### SECTION 3: Installation ####
-# GPU
-pkg install -y $toinstall
+install_pkgs () {
+	local packages=$@
+	local unistalled deps curr total
+
+	#to delete?
+	if [ "$RELEASE" == "CURRENT" ]; then
+		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+		--infobox "This system is CURRENT,\nrunning \"pkg update\"" 0 0
+		yes | pkg update
+	fi
+	# Dependencies
+	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+		--infobox "Finding uninstalled dependencies, could take a while.\n\n$packages" 0 0
+	unistalled=""
+	while [ "$packages" ]
+	do
+		deps=""
+		for p in $packages
+		do
+			echo "$unistalled" | grep -w $p >> /dev/null
+			[ $? -ne 1 ] && continue # already in the list
+
+			pkg info -e $p
+			[ $? -eq 0 ] && continue # already installed
+
+			unistalled="$p $unistalled"
+			deps="`pkg rquery %dn $p` $deps"
+		done
+		packages="$deps"
+	done
+	packages="$unistalled"
+
+	# Installation
+	if [ -z "$packages" ]; then
+		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+			--ok-label Close \
+			--msgbox "All requested packages already installed" 0 0
+		return BSDDIALOG_OK
+	fi
+	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+		--yesno "Do you want to install:\n\n$packages?" 0 0
+	[ $? -ne $BSDDIALOG_YES ] && return $BSDDIALOG_NO
+
+	total=`echo $packages | awk '{print split($0, a)}'`
+	curr=1
+	for package in $packages
+	do
+		perc="$(expr $(expr $curr "*" 100 ) "/" $total )"
+		echo XXX
+		echo $perc
+		echo "[$curr/$total] Download/Install $package"
+		pkg install -U -y $package
+		echo XXX
+		if [ $curr -eq $total ]; then
+			echo EOF
+		fi
+		curr=`expr $curr + 1`
+	done | bsddialog --backtitle "FreeBSD Installer" --title Desktop --gauge "Install $total package(s)" 10 60 0
+}
+
+install_pkgs -y $toinstall xorg kde sddm
+[ $? -ne $BSDDIALOG_OK ] && exit 1
+
+bsddialog --backtitle "FreeBSD Installer" --title Desktop --infobox "Setting DE..." 0 0
 eval $postconfig
-# DE
-pkg install -y xorg kde6 sddm
 sysrc dbus_enable="YES"
+sysrc sddm_enable="YES"
 echo "# KDE set up" >> /etc/sysctl.conf
 echo "net.local.stream.recvspace=65536" >> /etc/sysctl.conf
 echo "net.local.stream.sendspace=65536" >> /etc/sysctl.conf
-sysrc sddm_enable="YES"
-
-# TODO: add installation and configuration progress bars
 
 #### SECTION 4: Video group ####
 [ $gpu = VESA -o $gpu = SCFB ] && exit 0
