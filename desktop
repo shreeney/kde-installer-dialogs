@@ -169,7 +169,16 @@ install_pkgs () {
 	# Dependencies
 	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 		--infobox "Finding uninstalled dependencies, could take a while.\n\n$packages" 0 0
-	packages=$(pkg install -n $packages 2>/dev/null | awk '/^New packages to be INSTALLED:/{flag=1;next} /^Installed packages to be UPGRADED:/{flag=0} flag && /^[[:space:]]*[A-Za-z0-9_.+-]/ {sub(/:.*/,""); print $1}')
+	#packages=$(pkg install -n $packages 2>/dev/null | awk '/^New packages to be INSTALLED:/{flag=1;next} /^Installed packages to be UPGRADED:/{flag=0} flag && /^[[:space:]]*[A-Za-z0-9_.+-]/ {sub(/:.*/,""); print $1}')
+		packages=$(
+		pkg install -n audacity 2>/dev/null |
+		awk '
+			/^New packages to be INSTALLED:/ {flag=1; next}
+			flag && NF==0 {exit}
+			flag && /^[[:space:]]*[A-Za-z0-9_.+-]/ {
+				sub(/:.*/,""); print $1
+			}'
+	)
 
 	# Installation
 	if [ -z "$packages" ]; then
