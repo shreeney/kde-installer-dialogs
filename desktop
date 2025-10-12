@@ -157,6 +157,9 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 fi
 
 #### SECTION 3: Installation ####
+readonly CONTINUE=0
+readonly END=1
+
 install_pkgs_fast () {
 	local packages=$@
 	local curr total
@@ -180,13 +183,13 @@ install_pkgs_fast () {
 		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 			--ok-label Close \
 			--msgbox "All requested packages already installed" 0 0
-		return $BSDDIALOG_OK
+		return $END
 	fi
 	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 		--yesno "Do you want to install:\n\n$packages?" 0 0
-	[ $? -ne $BSDDIALOG_YES ] && return $BSDDIALOG_NO
+	[ $? -ne $BSDDIALOG_YES ] && return $END
 	pkg install -y $@
-
+	return $CONTINUE
 }
 
 install_pkgs_slow () {
@@ -224,11 +227,11 @@ install_pkgs_slow () {
 		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 			--ok-label Close \
 			--msgbox "All requested packages already installed" 0 0
-		return $BSDDIALOG_OK
+		return $END
 	fi
 	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 		--yesno "Do you want to install:\n\n$packages?" 0 0
-	[ $? -ne $BSDDIALOG_YES ] && return $BSDDIALOG_NO
+	[ $? -ne $BSDDIALOG_YES ] && return $END
 
 	# Mixedgauge?
 	total=`echo $packages | awk '{print split($0, a)}'`
@@ -246,6 +249,7 @@ install_pkgs_slow () {
 		fi
 		curr=`expr $curr + 1`
 	done | bsddialog --backtitle "FreeBSD Installer" --title Desktop --gauge "Install $total package(s)" 10 60 0
+	return $CONTINUE
 }
 
 installfunc=install_pkgs_slow
@@ -257,7 +261,7 @@ bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 	
 
 $installfunc $toinstall xorg kde sddm
-[ $? -ne $BSDDIALOG_OK ] && exit 1
+[ $? -ne $CONTINUE ] && exit 0
 
 bsddialog --backtitle "FreeBSD Installer" --title Desktop --infobox "Setting DE..." 0 0
 eval $postconfig
