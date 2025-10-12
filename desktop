@@ -180,7 +180,7 @@ install_pkgs_fast () {
 		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 			--ok-label Close \
 			--msgbox "All requested packages already installed" 0 0
-		return BSDDIALOG_OK
+		return $BSDDIALOG_OK
 	fi
 	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 		--yesno "Do you want to install:\n\n$packages?" 0 0
@@ -224,7 +224,7 @@ install_pkgs_slow () {
 		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 			--ok-label Close \
 			--msgbox "All requested packages already installed" 0 0
-		return BSDDIALOG_OK
+		return $BSDDIALOG_OK
 	fi
 	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 		--yesno "Do you want to install:\n\n$packages?" 0 0
