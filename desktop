@@ -161,11 +161,10 @@ install_pkgs_fast () {
 	local packages=$@
 	local curr total
 
-	if [ "$RELEASE" == "CURRENT" ]; then
-		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-		--infobox "This system is CURRENT,\nrunning \"pkg update\"" 0 0
-		yes | pkg update
-	fi
+	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+		--infobox "pkg update" 0 0
+	ASSUME_ALWAYS_YES=yes pkg update
+
 	# Dependencies
 	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 		--infobox "Finding uninstalled dependencies, could take a while.\n\n$packages" 0 0
@@ -194,11 +193,10 @@ install_pkgs_slow () {
 	local packages=$@
 	local unistalled deps curr total
 
-	if [ "$RELEASE" == "CURRENT" ]; then
-		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-		--infobox "This system is CURRENT,\nrunning \"pkg update\"" 0 0
-		yes | pkg update
-	fi
+	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+		--infobox "pkg update" 0 0
+	ASSUME_ALWAYS_YES=yes pkg update
+
 	# Dependencies
 	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 		--infobox "Finding uninstalled dependencies, could take a while.\n\n$packages" 0 0
