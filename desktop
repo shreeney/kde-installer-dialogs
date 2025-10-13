@@ -83,25 +83,25 @@ postconfig=""
 case $gpu in
 	DRM )
 		toinstall="$toinstall graphics/drm-kmod"
-		postconfig="sysrc kld_list+=\" i915kms amdgpu radeonkms\""
+		postconfig="echo kld_list=\"i915kms amdgpu radeonkms\""
 		;;
 	Optimus-Intel)
 		optimus=1
 		;&
 	Intel)
 		toinstall="$toinstall graphics/drm-kmod x11-drivers/xf86-video-intel"
-		postconfig="sysrc kld_list+=\" i915kms\""
+		postconfig="echo kld_list=\"i915kms\""
 		;;
 	Optimus-AMD)
 		optimus=1
 		;&
 	AMD)
 		toinstall="$toinstall graphics/drm-kmod"
-		postconfig="sysrc kld_list+=\" amdgpu\""
+		postconfig="echo kld_list=\"amdgpu\""
 		;;
 	Radeon )
 		toinstall="$toinstall graphics/drm-kmod"
-		postconfig="sysrc kld_list+=\" radeonkms\""
+		postconfig="echo kld_list=\"radeonkms\""
 		;;
 	VESA)
 		toinstall="$toinstall xf86-video-vesa"
