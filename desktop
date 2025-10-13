@@ -195,9 +195,9 @@ install_pkgs $toinstall xorg kde sddm
 [ $? -ne $CONTINUE ] && exit 0
 
 bsddialog --backtitle "FreeBSD Installer" --title Desktop --infobox "Setting DE..." 0 0
-eval $postconfig
 # sysrc not a pkgbase minimal installation
 echo "# KDE set up" >> /etc/rc.conf
+eval $postconfig
 echo dbus_enable=\"YES\" >> /etc/rc.conf
 echo sddm_enable=\"YES\" >> /etc/rc.conf
 echo "# KDE set up" >> /etc/sysctl.conf
