@@ -105,7 +105,7 @@ case $gpu in
 		;;
 	VirtualBox)
 		toinstall="virtualbox-ose-additions"
-		postconfig="echo -e \"vboxguest_enable=\\\"YES\\\"\nvboxservice_enable=\\\"YES\\\"\" >> ./rc.conf"
+		postconfig="echo -e \"vboxguest_enable=\\\"YES\\\"\nvboxservice_enable=\\\"YES\\\"\" >> /etc/rc.conf"
 		;;
 	VESA)
 		toinstall="xf86-video-vesa"
