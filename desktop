@@ -37,9 +37,9 @@ readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-installerdriver.conf
 
 ####
 # 1. Yes-No question to install KDE.
-# 2. Radiolist GPU drivers.
-# 3. Installation progress: GPU driver, Xorg, KDE, sddm, and conf.
-# 4. Checklist to select users to add to the video group.
+# 2. Radiolist GPU.
+# 3. Installation and Configuration: GPU, Xorg, KDE, sddm, rc.conf and sysctl.
+# 4. Checklist for users to add to the video group.
 ####
 
 #### SECTION 1 ####
@@ -50,14 +50,14 @@ bsddialog --backtitle "FreeBSD Installer" --title "Desktop" --colors \
 #### SECTION 2: Graphic card ####
 PKGGPU=`fwget -n -q | grep gpu`
 BOOTMETHOD=`sysctl -n machdep.bootmethod`
-# F1 help message
+# F1 help message...
 HELPGPU="System firmware boot method: $BOOTMETHOD
 
 GPU:
 `pciconf -lv | grep -A 4 vga`
 
 Detected firmware package: $PKGGPU"
-# end F1 help message
+# ...end F1 help message
 
 # TODO: add auto detection, via pciconf -lv and fwget -n -q
 gpu=$(bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
