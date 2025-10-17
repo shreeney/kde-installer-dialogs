@@ -83,25 +83,25 @@ postconfig=""
 case $gpu in
 	DRM)
 		toinstall="drm-kmod"
-		postconfig="echo kld_list=\"i915kms amdgpu radeonkms\" >> /etc/rc.conf"
+		postconfig="echo kld_list=\\\"i915kms amdgpu radeonkms\\\" >> /etc/rc.conf"
 		;;
 	Optimus-Intel)
 		optimus=1
 		;&
 	Intel)
 		toinstall="drm-kmod"
-		postconfig="echo kld_list=\"i915kms\" >> /etc/rc.conf"
+		postconfig="echo kld_list=\\\"i915kms\\\" >> /etc/rc.conf"
 		;;
 	Optimus-AMD)
 		optimus=1
 		;&
 	AMD)
 		toinstall="drm-kmod"
-		postconfig="echo kld_list=\"amdgpu\" >> /etc/rc.conf"
+		postconfig="echo kld_list=\\\"amdgpu\\\" >> /etc/rc.conf"
 		;;
 	Radeon)
 		toinstall="drm-kmod"
-		postconfig="echo kld_list=\"radeonkms\" >> /etc/rc.conf"
+		postconfig="echo kld_list=\\\"radeonkms\\\" >> /etc/rc.conf"
 		;;
 	VirtualBox)
 		toinstall="virtualbox-ose-additions"
