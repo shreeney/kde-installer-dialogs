@@ -184,7 +184,7 @@ fi
 #### SECTION 4: Video group ####
 [ $gpu = VESA -o $gpu = SCFB -o $gpu = VirtualBox ] && exit 0
 
-users=`pw usershow -a | awk -F":" '$10 != "" && $10 != "/usr/sbin/nologin"{print $1 " \""$8"\" off"}' | sort`
+users=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
 
 exec 5>&1
 USERS=$(echo ${users} | xargs -o bsddialog --backtitle "FreeBSD Installer" \
