@@ -118,6 +118,9 @@ case $gpu in
 esac
 
 if [ $gpu = NVIDIA -o $optimus ]; then
+	# WIP TODO for now
+	bsddialog --ok-label "Exit" --msgbox "Sorry, this feature is still under development and testing." 0 0
+	exit 1
 	items='Untested NVIDIA-550 "Proprietary driver version 550" off'
 	if [ $optimus ]; then
 		items="$items "'"" NVIDIA-390 "Proprietary driver version 390" off'
