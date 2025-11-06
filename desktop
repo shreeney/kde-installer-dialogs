@@ -82,25 +82,25 @@ toinstall=""
 postconfig=""
 case $gpu in
 	DRM)
-		toinstall="drm-kmod"
+		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
 		postconfig="echo kld_list=\\\"i915kms amdgpu radeonkms\\\" >> /etc/rc.conf"
 		;;
 	Optimus-Intel)
 		optimus=1
 		;&
 	Intel)
-		toinstall="drm-kmod"
+		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
 		postconfig="echo kld_list=\\\"i915kms\\\" >> /etc/rc.conf"
 		;;
 	Optimus-AMD)
 		optimus=1
 		;&
 	AMD)
-		toinstall="drm-kmod"
+		toinstall="drm-kmod mesa-gallium-va libva-utils"
 		postconfig="echo kld_list=\\\"amdgpu\\\" >> /etc/rc.conf"
 		;;
 	Radeon)
-		toinstall="drm-kmod"
+		toinstall="drm-kmod mesa-gallium-va libva-utils"
 		postconfig="echo kld_list=\\\"radeonkms\\\" >> /etc/rc.conf"
 		;;
 	VirtualBox)
@@ -165,7 +165,7 @@ fi
 
 #### SECTION 3: Installation ####
 ASSUME_ALWAYS_YES=yes pkg update
-pkg install $toinstall xorg kde sddm
+pkg install $toinstall xorg kde sddm wireplumber
 [ $? -ne 0 ] && exit 0
 
 bsddialog --backtitle "FreeBSD Installer" --title Desktop --infobox "Setting DE..." 0 0
