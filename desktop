@@ -38,8 +38,8 @@ readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-installerdriver.conf
 ####
 # 1. Yes-No question to install KDE.
 # 2. Radiolist GPU.
-# 3. Installation and Configuration: GPU, Xorg, KDE, sddm, rc.conf and sysctl.
-# 4. Checklist for users to add to the video group.
+# 3. Installation and Global Configuration.
+# 4. Checklist and Configuration for users.
 ####
 
 #### SECTION 1 ####
@@ -151,7 +151,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 	fi
 fi
 
-#### SECTION 3: Installation ####
+#### SECTION 3: Installation and Global Configuration ####
 ASSUME_ALWAYS_YES=yes pkg update
 pkg install $toinstall xorg kde sddm wireplumber
 [ $? -ne 0 ] && exit 0
@@ -172,7 +172,7 @@ if [ $gpu = VirtualBox ]; then
 	0 0
 fi
 
-#### SECTION 4: Video group ####
+#### SECTION 4: For User Configuration ####
 [ $gpu = VESA -o $gpu = SCFB -o $gpu = VirtualBox ] && exit 0
 
 users=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
