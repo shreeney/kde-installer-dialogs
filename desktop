@@ -114,48 +114,40 @@ case $gpu in
 esac
 
 if [ $gpu = NVIDIA -o $optimus ]; then
-	# WIP TODO for now
-	bsddialog --ok-label "Exit" --msgbox "Sorry, this feature is still under development and testing." 0 0
-	exit 1
-	items='Untested NVIDIA-550 "Proprietary driver version 550" off'
-	if [ $optimus ]; then
-		items="$items "'"" NVIDIA-390 "Proprietary driver version 390" off'
-	else
-		items="$items "'Untested NVIDIA-470 "Proprietary driver version 470" off'
-		items="$items "'"" NVIDIA-390 "Proprietary driver version 390" off'
-		items="$items "'Untested NVIDIA-340 "Proprietary driver version 340 (only PORT)" off'
-		items="$items "'Untested NVIDIA-304 "Proprietary driver version 304 (only PORT)" off'
-	fi
-	gpu=$(echo $items | xargs -o bsddialog --title "$TITLE" \
+	# 580 no in handbook.
+	items="Untested nvidia-drm-kmod 'Proprietary driver for recent GPUs' off \
+	Untested nvidia-driver-470 'Old proprietary driver version 470' off \
+	Untested nvidia-driver-390 'Old proprietary driver version 390' off \
+	Untested nvidia-driver-340 'Old proprietary driver version 340' off \
+	Untested nvidia-driver-304 'Old proprietary driver version 304' off"
+
+	gpu=$(echo $items | xargs -o bsddialog --title Desktop \
 		--ok-label Install --cancel-label Skip --hmsg "$HELPGPU" \
 		--item-prefix \
-		--radiolist "F1 to know your GPU, SPACE to select a driver:" \
+		--radiolist "F1 to know your GPU and which driver supports it. SPACE to select a driver." \
 		0 0 0 \
 	3>&1 1>&2 2>&3 3>&-)
-	if [ $? -eq $BSDDIALOG_OK -a -n "$gpu" ]; then
-		version=${gpu##NVIDIA-}
-		if [ $version -eq 550 ]; then
-			toinstall="$toinstall x11/nvidia-driver"
-			if [ $optimus ]; then
-				toinstall="$toinstall x11/nvidia-hybrid-graphics"
-			fi
-		else
-			toinstall="$toinstall x11/nvidia-driver-$version"
-			if [ $optimus ]; then
-				toinstall="$toinstall x11/nvidia-hybrid-graphics-390"
-			fi
-		fi
-		if [ $version -le 340 ]; then
-			if [ $INSTALLFUNC = install_pkgs ]; then
-				bsddialog --title "${TITLE}" --ok-label Quit \
-					--msgbox "The driver nvidia-driver-$version can be installed only via PORTS, restart $0 with -P option." 0 0
-				log "Cannot install nvidia-driver-$version via pkg, restart $0 with -P option"
-				exit $EXIT_FAILURE
-			fi
-			postconfig="sysrc kld_list+=\" nvidia\""
-		else
-			postconfig="$postconfig ; sysrc kld_list+=\" nvidia-modeset\""
-		fi
+	[ $? -ne $BSDDIALOG_OK -o -z $gpu ] && exit 0
+
+	toinstall="$toinstall $gpu"
+	version=${gpu##NVIDIA-}
+	if [ $version = drm-kmod ]; then
+		kmod=nvidia-drm
+	elif [ $version -ge 390 ]
+		kmod=nvidia-modeset
+	else
+		# 304 and 340.
+		# Available for OPTIMUS?
+		# Handbook: with the legacy sc(4) console driver, and a
+		# x11/xorg-server version prior to 1.20.
+		kmod=nvidia
+	fi
+
+	if [ $optimus ]; then
+		postconfig="$postconfig ; echo hw.nvidiadrm.modeset=\\\"1\\\" >> /boot/loader.con"
+		postconfig="echo kld_list=\\\"i915kms $kmod\\\" >> /etc/rc.conf"
+	else
+		postconfig="echo kld_list=\\\"$kmod\\\" >> /etc/rc.conf"
 	fi
 fi
 
