@@ -70,7 +70,7 @@ gpu=$(bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
 	1 Radeon        "Older AMD GPUs (EFI boot should be disabled)"   off \
 	0 NVIDIA        "Proprietary driver "                            off \
 	1 Optimus-Intel "Nvidia Optimus and Intel GPU"                   off \
-	0 VirtualBox    "Oracle VirtualBox (only FreeBSD 14.3)"          off \
+	0 VirtualBox    "Oracle VirtualBox. Work In Progress!"           off \
 	0 VESA          "GPU not supported by other drivers (BIOS)"      off \
 	0 SCFB          "GPU not supported by other drivers (UEFI)"      off \
 	3>&1 1>&2 2>&3 3>&-)
