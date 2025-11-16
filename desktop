@@ -196,6 +196,10 @@ fi
 
 if [ $gpu = VirtualBox ]; then
 	pw groupmod wheel -m `echo "$USERS" | tr ' ' ','`
+	# Useful for poweroff(8). Is this script the right place for this setting?
+	if [ `sysctl -n machdep.bootmethod` = UEFI ]; then
+		echo "hw.efi.poweroff=0" >> /etc/sysctl.conf
+	fi
 fi
 
 gen_autostart_entry() {
