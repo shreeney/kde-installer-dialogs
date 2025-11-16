@@ -175,16 +175,18 @@ if [ $gpu = VirtualBox ]; then
 fi
 
 #### SECTION 4: For User Configuration ####
-[ $gpu = VESA -o $gpu = SCFB -o $gpu = VirtualBox ] && exit 0
-
 users=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
 
 exec 5>&1
 USERS=$(echo ${users} | xargs -o bsddialog --backtitle "FreeBSD Installer" \
 	--title "Desktop" --ok-label Add --cancel-label Skip \
-	--checklist 'Select users to add to the "video" group for 3D acceleration.' 0 0 0 2>&1 1>&5)
+	--checklist 'Select the users enabled for the graphical environment:' 0 0 0 2>&1 1>&5)
 exec 5>&-
-[ $? -ne $BSDDIALOG_OK ] && exit 1
+[ $? -ne $BSDDIALOG_OK -o -z "USERS" ] && exit 0
+
+if [ $gpu != VESA -a $gpu != SCFB -a $gpu != VirtualBox ]; then
+	pw groupmod video -m `echo "$USERS" | tr ' ' ','`
+fi
 
 gen_autostart_entry() {
 	cat <<EOF
@@ -200,25 +202,23 @@ Version=1.0
 $4
 EOF
 }
-if [ -n "$USERS" ] ; then
-	pw groupmod video -m `echo "$USERS" | tr ' ' ','`
-	for u in $USERS; do
-		user_home="$(pw usershow ${u} | awk -F: '{print $(NF-1)}')"
-		user_config_dir="/mnt/${user_home}/.config"
-		mkdir -p "${user_config_dir}/autostart"
-		gen_autostart_entry \
-			'PipeWire Media System' \
-			'Start the PipeWire Media System' \
-			pipewire > "${user_config_dir}/autostart/pipewire.desktop"
-		gen_autostart_entry \
-			'PipeWire PulseAudio replacement' \
-			'Start the PulseAudio-compatible PipeWire daemon' \
-			pipewire-pulse > "${user_config_dir}/autostart/pipewire-pulse.desktop"
-		gen_autostart_entry \
-			'PulseAudio Sound System' \
-			'Start the PulseAudio Sound System' \
-			'start-pulseaudio-x11' \
-			'Hidden=true' > "${user_config_dir}/autostart/pulseaudio.desktop"
-		chown -R ${u}:${u} "${user_config_dir}"
-	done
-fi
+
+for u in $USERS; do
+	user_home="$(pw usershow ${u} | awk -F: '{print $(NF-1)}')"
+	user_config_dir="/mnt/${user_home}/.config"
+	mkdir -p "${user_config_dir}/autostart"
+	gen_autostart_entry \
+		'PipeWire Media System' \
+		'Start the PipeWire Media System' \
+		pipewire > "${user_config_dir}/autostart/pipewire.desktop"
+	gen_autostart_entry \
+		'PipeWire PulseAudio replacement' \
+		'Start the PulseAudio-compatible PipeWire daemon' \
+		pipewire-pulse > "${user_config_dir}/autostart/pipewire-pulse.desktop"
+	gen_autostart_entry \
+		'PulseAudio Sound System' \
+		'Start the PulseAudio Sound System' \
+		'start-pulseaudio-x11' \
+		'Hidden=true' > "${user_config_dir}/autostart/pulseaudio.desktop"
+	chown -R ${u}:${u} "${user_config_dir}"
+done
