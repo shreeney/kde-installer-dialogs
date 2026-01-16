@@ -40,6 +40,7 @@ readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-installerdriver.conf
 # 2. Radiolist GPU.
 # 3. Installation and Global Configuration.
 # 4. Checklist and Configuration for users.
+# 5. Success message.
 ####
 
 #### SECTION 1 ####
@@ -245,3 +246,8 @@ for u in $USERS; do
 		'Hidden=true' > "${user_config_dir}/autostart/pulseaudio.desktop"
 	chown -R ${u}:${u} "${user_config_dir}"
 done
+
+#### SECTION 5: Success Message ####
+bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+	--msgbox "\nDesktop installation completed.\n\nThe SDDM display manager will start automatically and allow graphical login at the next startup. The enabled users with configured settings are: ${USERS}." \
+	0 0
