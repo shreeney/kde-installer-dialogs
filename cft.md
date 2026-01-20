@@ -3,6 +3,8 @@
 The purpose of this script is to install and configure a graphical environment that starts automatically after reboot.
 At the moment, development is focused on: GPU, Xorg, KDE Plasma, and SDDM. Additional options may be added in the future.
 
+**This script is still experimental, participate only if you are familiar with configuring and using FreeBSD.**
+
 ## Testing
 
 The script is intended to be integrated into bsdinstall, but it is currently in the testing phase and must be run after installation. The script can be tested immediately after an installation or on an already installed system.
