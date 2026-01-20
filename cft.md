@@ -1,0 +1,63 @@
+Call for testing: KDE installation script
+
+The purpose of this script is to install and configure a graphical environment that starts automatically after reboot.
+At the moment, development is focused on GPU configuration, Xorg, KDE Plasma, and SDDM. Additional options may be added in the future.
+
+Testing
+
+The script is intended to be integrated into bsdinstall, but it is currently in the testing phase and must be run after installation. There are several ways to test it.
+
+Testing after installation (Live CD)
+
+1. Install FreeBSD. You may choose pkgbase (including minimal installation) or distribution extraction.
+2. On the final screen, select “LIVE CD”.
+3. Run the following commands as root:
+
+fetch [https://gitlab.com/alfix/kde-installer-dialogs/-/raw/main/desktop](https://gitlab.com/alfix/kde-installer-dialogs/-/raw/main/desktop)
+./desktop
+
+Testing on an installed system
+
+Run the following commands as root:
+
+fetch [https://gitlab.com/alfix/kde-installer-dialogs/-/raw/main/desktop](https://gitlab.com/alfix/kde-installer-dialogs/-/raw/main/desktop)
+./desktop
+
+Testing warning
+
+If the script is executed multiple times, it duplicates configuration entries in /etc/rc.conf and /boot/loader.conf.
+The script currently does not check whether options are already enabled.
+
+After installation, please manually verify both configuration files. This limitation will be addressed when the script is updated for integration with bsdinstall. More details are available here:
+[https://gitlab.com/alfix/kde-installer-dialogs/-/issues/20#note_3011254558](https://gitlab.com/alfix/kde-installer-dialogs/-/issues/20#note_3011254558)
+
+Reporting
+
+I am particularly interested in NVIDIA hardware testing, as I do not own a recent laptop with this hardware.
+My current NVIDIA Optimus laptop dates back to 2011:
+[https://wiki.freebsd.org/Laptops/Acer_Aspire_5742G](https://wiki.freebsd.org/Laptops/Acer_Aspire_5742G)
+
+Successful test
+
+If your test is successful, please add an entry to the table below by submitting a Pull Request on GitHub or a Merge Request on GitLab.
+
+Please include the following information:
+
+FreeBSD Version: output of `uname -rK`
+Hardware: real hardware or virtual machine
+GPU:
+
+* pciconf -lv | grep -A 4 vga
+* fwget -nq | grep gpu
+  Driver: selected GPU option in the dialog (AMD, Intel, nvidia-drm-kmod, nvidia-driver-XYZ, etc.)
+  Notes: optional
+
+Test results table
+
+FreeBSD Version | GPU | Driver | Notes
+
+Failed test
+
+If the test fails, please report the issue with a detailed description.
+You can submit a new issue on either GitLab or GitHub.
+
