@@ -39,7 +39,10 @@ I am particularly interested in NVIDIA hardware testing, as I do not own a recen
 
 ### Successful test
 
-If your test is successful, please add an entry to the table below by submitting a Pull Request on GitHub or a [Merge Request on GitLab](https://gitlab.com/alfix/kde-installer-dialogs/-/merge_requests).
+If your test is successful, please add an entry to the table below by submitting a
+[Pull Request on GitHub](https://github.com/alfonsosiciliano/kde-installer-dialogs/pulls)
+or a
+[Merge Request on GitLab](https://gitlab.com/alfix/kde-installer-dialogs/-/merge_requests).
 
  - FreeBSD Version: output of `uname -rK` and real hardware or virtual machine.
  - GPU: `pciconf -lv | grep -A 4 vga` and `fwget -nq | grep gpu`
@@ -61,7 +64,9 @@ If your test is successful, please add an entry to the table below by submitting
 ### Failed test
 
 If the test fails, please report the issue with a detailed description.
-You can submit a new issue on either [GitLab](https://gitlab.com/alfix/kde-installer-dialogs/-/issues) or GitHub.
+You can submit a new issue on either
+[GitLab](https://gitlab.com/alfix/kde-installer-dialogs/-/issues) or
+[GitHub](https://github.com/alfonsosiciliano/kde-installer-dialogs/issues).
 
 ## Thank you in advance for your report!
 

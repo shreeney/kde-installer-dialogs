@@ -17,6 +17,12 @@ A temporary clone is also available on
 [GitHub](https://github.com/alfonsosiciliano/kde-installer-dialogs)
 to simplify the Call for Testing people without a GitLab account.
 
+Call for testing
+----------------
+
+A Call for Testing is available. Please read [cft.md](cft.md) it you wanto to participate.
+Note, this feature is still experimental, participate only if you are familiar with configuring and using FreeBSD.
+
 Screenshots
 -----------
 
