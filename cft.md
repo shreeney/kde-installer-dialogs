@@ -53,7 +53,7 @@ or a
 
 | FreeBSD Version | GPU | Driver | Notes |
 | --------------- | --- | ------ | ----- |
-|                 |     |        |       |
+| 15.0-RELEASE-p1 1500068 | GP108M | GeForce MX150 | All OK! Asus Zenbook ux433fn |
 |                 |     |        |       |
 |                 |     |        |       |
 |                 |     |        |       |
