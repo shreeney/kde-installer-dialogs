@@ -208,8 +208,8 @@ if [ $gpu = VirtualBox ]; then
 	pw groupmod wheel -m `echo "$USERS" | tr ' ' ','`
 	# Useful for poweroff(8). Is this script the right place for this setting?
 	if [ `sysctl -n machdep.bootmethod` = UEFI ]; then
-		echo "# VirtualBox setup" >> loader.conf
-		echo "hw.efi.poweroff=0" >> loader.conf
+		echo "# VirtualBox setup" >> /boot/loader.conf
+		echo "hw.efi.poweroff=0" >> /boot/loader.conf
 	fi
 fi
 
