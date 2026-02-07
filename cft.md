@@ -23,7 +23,7 @@ The script is intended to be integrated into bsdinstall, but it is currently in 
 
 Run the following commands:
 ```
-# fetch https://gitlab.com/alfix/kde-installer-dialogs/-/raw/# main/desktop
+# fetch https://gitlab.com/alfix/kde-installer-dialogs/-/raw/main/desktop
 ./desktop
 ```
 
