@@ -58,7 +58,7 @@ or a
 | 15.0-RELEASE-p1 1500068 | GP108M | GeForce MX150 | All OK! Asus Zenbook ux433fn |
 | 16.0-CURRENT 1600009 | Intel Iris Graphics 6100 | Intel | MacBook Pro 12,1 (Early 2015) |
 | 15.0-RELEASE 1500068 | Nvidia GeForce RTX 3080 Ti | Nvidia | PC |
-|                 |     |        |       |
+| 15.0-RELEASE-p2 1500068 | NVIDIA GeForce GTX 1650 Ti Mobile  |  nvidia-drm  | Thinkpad X1 Extreme Gen3 |
 |                 |     |        |       |
 |                 |     |        |       |
 |                 |     |        |       |
