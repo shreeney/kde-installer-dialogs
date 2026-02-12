@@ -174,7 +174,6 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 fi
 
 #### SECTION 3: Installation and Global Configuration ####
-  # Add Ly display manager with beastie logo
 ASSUME_ALWAYS_YES=yes pkg update
 
 pkg install $toinstall xorg kde plasma6-plasma ly wireplumber
@@ -185,6 +184,16 @@ eval $postconfig
 echo "# KDE setup" >> /etc/rc.conf
 # sysrc(8) is not in a pkgbase minimal installation
 echo dbus_enable=\"YES\" >> /etc/rc.conf
+
+# Append the Ly configuration to the end of the file
+cat << 'EOF' >> /etc/gettytab
+Ly:\
+:lo=/usr/local/bin/ly_wrapper:\
+:al=root:
+EOF
+
+sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 "/usr/libexec/getty Ly" xterm on secure|' /etc/ttys
+
 echo "# KDE setup" >> /etc/sysctl.conf
 echo "net.local.stream.recvspace=65536" >> /etc/sysctl.conf
 echo "net.local.stream.sendspace=65536" >> /etc/sysctl.conf
@@ -201,7 +210,7 @@ users=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print
 exec 5>&1
 USERS=$(echo ${users} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
 	--title "Desktop" --ok-label Add --cancel-label Exit \
-	--checklist 'Select the users enabled for the graphical environment:' 0 60 0 2>&1 1>&5)
+	--checklist 'Select the users enabled for the graphical environment:' 0 0 0 2>&1 1>&5)
 exec 5>&-
 [ $? -ne $BSDDIALOG_OK -o -z "$USERS" ] && exit 0
 
@@ -218,14 +227,6 @@ if [ $gpu = VirtualBox ]; then
 	fi
 fi
 
-# Append the Ly configuration to the end of the file
-cat << 'EOF' >> /etc/gettytab
-Ly:\
-	:lo=/usr/local/bin/ly_wrapper:\
-	:al=root:
-EOF
-
-sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 "/usr/libexec/getty Ly" xterm on secure|' /etc/ttys
 
 gen_autostart_entry() {
 	cat <<EOF
@@ -264,6 +265,6 @@ done
 
 #### SECTION 5: Success Message ####
 
-bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-	--msgbox "\nDesktop installation completed.\n\nThe Ly display manager will start automatically and allow text-based login at the next startup. The enabled users with configured settings are: ${USERS}." \
+
+	--msgbox "\nDesktop installation completed.\n\nThe Ly display manager will start automatically and allow graphical login at the next startup. The enabled users with configured settings are: ${USERS}." \
 	0 0
