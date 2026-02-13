@@ -177,7 +177,6 @@ fi
 ASSUME_ALWAYS_YES=yes pkg update
 
 pkg install $toinstall xorg kde plasma6-plasma ly wireplumber
-[ $? -ne 0 ] && exit 0
 
 bsddialog --backtitle "$OSNAME Installer" --title Desktop --infobox "Setting DE..." 0 0
 eval $postconfig
@@ -193,6 +192,28 @@ Ly:\
 EOF
 
 sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 "/usr/libexec/getty Ly" xterm on secure|' /etc/ttys
+
+#Add FreeBSD branding and logo
+
+#Ascii X and Y offset
+
+sed '/dur_x_offset = 0/c\
+dur_x_offset = 120' /usr/local/etc/ly/config.ini
+
+sed '/dur_y_offset = 0/c\
+dur_y_offset = 22' /usr/local/etc/ly/config.ini
+
+#enable ascii support
+
+sed '/animation = none/c\
+animation = durdraw' /usr/local/etc/ly/config.ini
+
+SCRIPT_DIR=$(dirname "$0")
+
+mv "$SCRIPT_DIR/bsd.durf" "/usr/local/etc/ly"
+
+sed '/dur_file_path = /usr/local/etc/ly/example.dur/c\
+dur_file_path = /usr/local/etc/ly/bsd.dur' /usr/local/etc/ly/config.ini
 
 echo "# KDE setup" >> /etc/sysctl.conf
 echo "net.local.stream.recvspace=65536" >> /etc/sysctl.conf
