@@ -29,6 +29,10 @@
 # SUCH DAMAGE.
 #
 
+# Include for $OSNAME
+BSDCFG_SHARE="/usr/share/bsdconfig"
+. $BSDCFG_SHARE/common.subr || exit 1
+
 readonly BSDDIALOG_OK=0
 readonly BSDDIALOG_YES=$BSDDIALOG_OK
 readonly BSDDIALOG_NO=1
@@ -44,7 +48,7 @@ readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-installerdriver.conf
 ####
 
 #### SECTION 1 ####
-bsddialog --backtitle "FreeBSD Installer" --title Desktop --colors \
+bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
 	--yesno "FreeBSD provides a variety of graphical environments that can be easily installed through ports and packages. Refer to the FreeBSD Handbook available at \Zuhttps://docs.freebsd.org\Zn.\n\nWould you like to install KDE Plasma now and start it at the next system reboot? Please note this is an experimental feature." 0 0
 [ $? -ne $BSDDIALOG_YES ] && exit 1
 
@@ -67,7 +71,7 @@ HELPGPU="\ZbSystem firmware boot method\Zn: $BOOTMETHOD
 # ...end F1 help message
 
 # TODO: add auto detection, via pciconf -lv and fwget -n -q
-gpu=$(bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--ok-label Install --cancel-label Exit \
 	--colors --hmsg "$HELPGPU" --item-depth \
 	--radiolist "F1 to know your GPU, SPACE to select a driver:" 0 0 0 \
@@ -137,7 +141,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 	Untested nvidia-driver-340 'Old proprietary driver version 340' off \
 	Untested nvidia-driver-304 'Old proprietary driver version 304' off"
 
-	gpu=$(echo $items | xargs -o bsddialog --backtitle "FreeBSD Installer" \
+	gpu=$(echo $items | xargs -o bsddialog --backtitle "$OSNAME Installer" \
 		--title Desktop --ok-label Install --cancel-label Exit \
 		--colors --hmsg "$HELPGPU" --item-prefix \
 		--radiolist "F1 to know your GPU and which driver supports it. SPACE to select a driver." \
@@ -174,7 +178,7 @@ ASSUME_ALWAYS_YES=yes pkg update
 pkg install $toinstall kde plasma6-plasma sddm wireplumber xorg
 [ $? -ne 0 ] && exit 0
 
-bsddialog --backtitle "FreeBSD Installer" --title Desktop --infobox "Setting DE..." 0 0
+bsddialog --backtitle "$OSNAME Installer" --title Desktop --infobox "Setting DE..." 0 0
 eval $postconfig
 echo "# KDE setup" >> /etc/rc.conf
 # sysrc(8) is not in a pkgbase minimal installation
@@ -185,7 +189,7 @@ echo "net.local.stream.recvspace=65536" >> /etc/sysctl.conf
 echo "net.local.stream.sendspace=65536" >> /etc/sysctl.conf
 
 if [ $gpu = VirtualBox ]; then
-	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--msgbox "VirtualBox setting: select VBoxSVGA as graphics controller, and disable 3D acceleration." \
 	0 0
 fi
@@ -194,7 +198,7 @@ fi
 users=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
 
 exec 5>&1
-USERS=$(echo ${users} | xargs -o bsddialog --backtitle "FreeBSD Installer" \
+USERS=$(echo ${users} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
 	--title "Desktop" --ok-label Add --cancel-label Exit \
 	--checklist 'Select the users enabled for the graphical environment:' 0 0 0 2>&1 1>&5)
 exec 5>&-
@@ -249,6 +253,6 @@ for u in $USERS; do
 done
 
 #### SECTION 5: Success Message ####
-bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--msgbox "\nDesktop installation completed.\n\nThe SDDM display manager will start automatically and allow graphical login at the next startup. The enabled users with configured settings are: ${USERS}." \
 	0 0
