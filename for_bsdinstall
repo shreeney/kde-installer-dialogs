@@ -1,0 +1,254 @@
+#!/bin/sh
+#-
+# SPDX-License-Identifier: BSD-2-Clause
+#
+# Copyright (c) 2026 The FreeBSD Foundation
+#
+# This software was developed by Alfonso Sabato Siciliano
+# under sponsorship from the FreeBSD Foundation.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+readonly BSDDIALOG_OK=0
+readonly BSDDIALOG_YES=$BSDDIALOG_OK
+readonly BSDDIALOG_NO=1
+
+readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-installerdriver.conf
+
+####
+# 1. Yes-No question to install KDE.
+# 2. Radiolist GPU.
+# 3. Installation and Global Configuration.
+# 4. Checklist and Configuration for users.
+# 5. Success message.
+####
+
+#### SECTION 1 ####
+bsddialog --backtitle "FreeBSD Installer" --title Desktop --colors \
+	--yesno "FreeBSD provides a variety of graphical environments that can be easily installed through ports and packages. Refer to the FreeBSD Handbook available at \Zuhttps://docs.freebsd.org\Zn.\n\nWould you like to install KDE Plasma now and start it at the next system reboot? Please note this is an experimental feature." 0 0
+[ $? -ne $BSDDIALOG_YES ] && exit 1
+
+if [ -z `hostname` ]; then
+	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+	--ok-label Exit --msgbox "Please set a hostname." 0 0
+	exit 1
+fi
+
+#### SECTION 2: Graphic card ####
+PKGGPU=`fwget -n -q | grep gpu`
+BOOTMETHOD=`sysctl -n machdep.bootmethod`
+# F1 help message...
+HELPGPU="\ZbSystem firmware boot method\Zn: $BOOTMETHOD
+
+\ZbGPU\Zn:
+`pciconf -lv | grep -A 4 vga`
+
+\ZbDetected firmware package\Zn: $PKGGPU"
+# ...end F1 help message
+
+# TODO: add auto detection, via pciconf -lv and fwget -n -q
+gpu=$(bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+	--ok-label Install --cancel-label Exit \
+	--colors --hmsg "$HELPGPU" --item-depth \
+	--radiolist "F1 to know your GPU, SPACE to select a driver:" 0 0 0 \
+	0 DRM           "Intel and AMD Metaport"                         off \
+	1 Intel         "Intel APUs starting with HD3000 / Sandy Bridge" off \
+	1 AMD           "AMD GPUs starting with HD7000 / Tahiti"         off \
+	1 Radeon        "Older AMD GPUs (EFI boot should be disabled)"   off \
+	0 NVIDIA        "Proprietary driver "                            off \
+	1 Optimus-Intel "Nvidia Optimus and Intel GPU"                   off \
+	0 VirtualBox    "Oracle VirtualBox. Work In Progress!"           off \
+	0 VESA          "GPU not supported by other drivers (BIOS)"      off \
+	0 SCFB          "GPU not supported by other drivers (UEFI)"      off \
+	3>&1 1>&2 2>&3 3>&-)
+[ $? -ne $BSDDIALOG_OK ] && exit 1
+[ -z $gpu ] && exit 0
+
+toinstall=""
+postconfig=""
+case $gpu in
+	DRM)
+		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
+		postconfig="echo kld_list=\\\"i915kms amdgpu radeonkms\\\" >> /etc/rc.conf"
+		;;
+	Optimus-Intel)
+		optimus=1
+		;&
+	Intel)
+		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
+		postconfig="echo kld_list=\\\"i915kms\\\" >> /etc/rc.conf"
+		;;
+	AMD)
+		toinstall="drm-kmod mesa-gallium-va libva-utils"
+		postconfig="echo kld_list=\\\"amdgpu\\\" >> /etc/rc.conf"
+		;;
+	Radeon)
+		toinstall="drm-kmod mesa-gallium-va libva-utils"
+		postconfig="echo kld_list=\\\"radeonkms\\\" >> /etc/rc.conf"
+		;;
+	VirtualBox)
+		toinstall="virtualbox-ose-additions"
+		postconfig="echo -e \"# VirtualBox setup\nvboxguest_enable=\\\"YES\\\"\nvboxservice_enable=\\\"YES\\\"\" >> /etc/rc.conf"
+		;;
+	VESA)
+		toinstall="xf86-video-vesa"
+		postconfig="echo -e \"Section \\\"Device\\\"\n\tIdentifier \\\"Card0\\\"\n\tDriver \\\"vesa\\\"\nEndSection\" >> $XDRIVERFILE"
+		;;
+	SCFB)
+		toinstall="xf86-video-scfb"
+		postconfig="echo -e \"Section \\\"Device\\\"\n\tIdentifier \\\"Card0\\\"\n\tDriver \\\"scfb\\\"\nEndSection\" >> $XDRIVERFILE"
+		;;
+esac
+
+HELPGPU="$HELPGPU
+
+\ZbSupported GPUs\Zn:
+ * nvidia-drm-drm: \Zuhttps://www.nvidia.com/en-us/drivers/details/210651/\Zn
+ * nvidia-driver-470: \Zuhttps://www.nvidia.com/en-us/drivers/details/194639/\Zn
+ * nvidia-driver-390: \Zuhttps://www.nvidia.com/en-us/drivers/details/191122/\Zn
+ * nvidia-driver-340: \Zuhttps://www.nvidia.com/en-us/drivers/details/156167/\Zn
+ * nvidia-driver-304: \Zuhttps://www.nvidia.com/en-us/drivers/details/123712/\Zn"
+
+if [ $gpu = NVIDIA -o $optimus ]; then
+	# 580 no in handbook.
+	items="Untested nvidia-drm-kmod 'Proprietary driver for recent GPUs' off \
+	Untested nvidia-driver-470 'Old proprietary driver version 470' off \
+	Untested nvidia-driver-390 'Old proprietary driver version 390' off \
+	Untested nvidia-driver-340 'Old proprietary driver version 340' off \
+	Untested nvidia-driver-304 'Old proprietary driver version 304' off"
+
+	gpu=$(echo $items | xargs -o bsddialog --backtitle "FreeBSD Installer" \
+		--title Desktop --ok-label Install --cancel-label Exit \
+		--colors --hmsg "$HELPGPU" --item-prefix \
+		--radiolist "F1 to know your GPU and which driver supports it. SPACE to select a driver." \
+		0 0 0 \
+	3>&1 1>&2 2>&3 3>&-)
+	[ $? -ne $BSDDIALOG_OK -o -z $gpu ] && exit 0
+
+	toinstall="$toinstall $gpu"
+	version=${gpu##nvidia-driver-}
+	# refactor importing to bsdinstall
+	if [ $version = "nvidia-drm-kmod" ]; then
+		# Handbook: when nvidia-drm or nvidia-modeset?
+		kmod=nvidia-drm
+	elif [ $version -ge 390 ]; then
+		kmod=nvidia-modeset
+	else
+		# 304 and 340.
+		# Available for OPTIMUS?
+		# Handbook: with the legacy sc(4) console driver, and a
+		# x11/xorg-server version prior to 1.20.
+		kmod=nvidia
+	fi
+
+	if [ $optimus ]; then
+		postconfig="$postconfig ; echo hw.nvidiadrm.modeset=\\\"1\\\" >> /boot/loader.conf"
+		postconfig="echo kld_list=\\\"i915kms $kmod\\\" >> /etc/rc.conf"
+	else
+		postconfig="echo kld_list=\\\"$kmod\\\" >> /etc/rc.conf"
+	fi
+fi
+
+#### SECTION 3: Installation and Global Configuration ####
+ASSUME_ALWAYS_YES=yes pkg update
+pkg install $toinstall kde plasma6-plasma sddm wireplumber xorg
+[ $? -ne 0 ] && exit 0
+
+bsddialog --backtitle "FreeBSD Installer" --title Desktop --infobox "Setting DE..." 0 0
+eval $postconfig
+echo "# KDE setup" >> /etc/rc.conf
+# sysrc(8) is not in a pkgbase minimal installation
+echo dbus_enable=\"YES\" >> /etc/rc.conf
+echo sddm_enable=\"YES\" >> /etc/rc.conf
+echo "# KDE setup" >> /etc/sysctl.conf
+echo "net.local.stream.recvspace=65536" >> /etc/sysctl.conf
+echo "net.local.stream.sendspace=65536" >> /etc/sysctl.conf
+
+if [ $gpu = VirtualBox ]; then
+	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+	--msgbox "VirtualBox setting: select VBoxSVGA as graphics controller, and disable 3D acceleration." \
+	0 0
+fi
+
+#### SECTION 4: For User Configuration ####
+users=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
+
+exec 5>&1
+USERS=$(echo ${users} | xargs -o bsddialog --backtitle "FreeBSD Installer" \
+	--title "Desktop" --ok-label Add --cancel-label Exit \
+	--checklist 'Select the users enabled for the graphical environment:' 0 0 0 2>&1 1>&5)
+exec 5>&-
+[ $? -ne $BSDDIALOG_OK -o -z "USERS" ] && exit 0
+
+if [ $gpu != VESA -a $gpu != SCFB -a $gpu != VirtualBox ]; then
+	pw groupmod video -m `echo "$USERS" | tr ' ' ','`
+fi
+
+if [ $gpu = VirtualBox ]; then
+	pw groupmod wheel -m `echo "$USERS" | tr ' ' ','`
+	# Useful for poweroff(8). Is this script the right place for this setting?
+	if [ `sysctl -n machdep.bootmethod` = UEFI ]; then
+		echo "# VirtualBox setup" >> /boot/loader.conf
+		echo "hw.efi.poweroff=0" >> /boot/loader.conf
+	fi
+fi
+
+gen_autostart_entry() {
+	cat <<EOF
+[Desktop Entry]
+Name=$1
+Comment=$2
+Exec=$3
+Terminal=false
+Type=Application
+X-GNOME-Autostart-Phase=Initialization
+X-KDE-autostart-phase=1
+Version=1.0
+$4
+EOF
+}
+
+for u in $USERS; do
+	user_home="$(pw usershow ${u} | awk -F: '{print $(NF-1)}')"
+	user_config_dir="/mnt/${user_home}/.config"
+	mkdir -p "${user_config_dir}/autostart"
+	gen_autostart_entry \
+		'PipeWire Media System' \
+		'Start the PipeWire Media System' \
+		pipewire > "${user_config_dir}/autostart/pipewire.desktop"
+	gen_autostart_entry \
+		'PipeWire PulseAudio replacement' \
+		'Start the PulseAudio-compatible PipeWire daemon' \
+		pipewire-pulse > "${user_config_dir}/autostart/pipewire-pulse.desktop"
+	gen_autostart_entry \
+		'PulseAudio Sound System' \
+		'Start the PulseAudio Sound System' \
+		'start-pulseaudio-x11' \
+		'Hidden=true' > "${user_config_dir}/autostart/pulseaudio.desktop"
+	chown -R ${u}:${u} "${user_config_dir}"
+done
+
+#### SECTION 5: Success Message ####
+bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+	--msgbox "\nDesktop installation completed.\n\nThe SDDM display manager will start automatically and allow graphical login at the next startup. The enabled users with configured settings are: ${USERS}." \
+	0 0
