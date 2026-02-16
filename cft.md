@@ -60,7 +60,7 @@ or a
 | 15.0-RELEASE 1500068 | Nvidia GeForce RTX 3080 Ti | Nvidia | PC |
 | 15.0-RELEASE 1500068 | Nvidia Geforce GTX 1070    | Nvidia | PC |
 | 15.0-RELEASE-p2 1500068 | NVIDIA GeForce GTX 1650 Ti Mobile  |  nvidia-drm  | Thinkpad X1 Extreme Gen3 |
-|                 |     |        |       |
+| 15.0-RELEASE-p3 1500068 | Intel UHD Graphics 770 | Intel | ThinkCentre M80q Gen 3 |
 |                 |     |        |       |
 |                 |     |        |       |
 |                 |     |        |       |
