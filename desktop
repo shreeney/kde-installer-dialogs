@@ -198,7 +198,7 @@ USERS=$(echo ${users} | xargs -o bsddialog --backtitle "FreeBSD Installer" \
 	--title "Desktop" --ok-label Add --cancel-label Exit \
 	--checklist 'Select the users enabled for the graphical environment:' 0 0 0 2>&1 1>&5)
 exec 5>&-
-[ $? -ne $BSDDIALOG_OK -o -z "USERS" ] && exit 0
+[ $? -ne $BSDDIALOG_OK -o -z "$USERS" ] && exit 0
 
 if [ $gpu != VESA -a $gpu != SCFB -a $gpu != VirtualBox ]; then
 	pw groupmod video -m `echo "$USERS" | tr ' ' ','`
