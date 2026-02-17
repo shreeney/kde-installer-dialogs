@@ -276,6 +276,6 @@ done
 
 #### SECTION 5: Success Message ####
 
-
+bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--msgbox "\nDesktop installation completed.\n\nThe Ly display manager will start automatically and allow graphical login at the next startup. The enabled users with configured settings are: ${USERS}." \
 	0 0
