@@ -193,6 +193,18 @@ EOF
 
 sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 "/usr/libexec/getty Ly" xterm on secure|' /etc/ttys
 
+# script's location
+script_dir=$(cd "$(dirname "$0")" && pwd)
+
+# paths
+file_name="config.ini"
+destination="/usr/local/etc/ly"
+
+# Move and overwrite
+mv -f "$script_dir/$file_name" "$destination/$file_name"
+
+
+
 echo "# KDE setup" >> /etc/sysctl.conf
 echo "net.local.stream.recvspace=65536" >> /etc/sysctl.conf
 echo "net.local.stream.sendspace=65536" >> /etc/sysctl.conf
