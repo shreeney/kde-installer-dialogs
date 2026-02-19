@@ -202,23 +202,23 @@ if [ $gpu = VirtualBox ]; then
 fi
 
 #### SECTION 4: For User Configuration ####
-users=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
+USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
 
 exec 5>&1
-USERS=$(echo ${users} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
+users=$(echo ${USERS} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
 	--title "Desktop" --ok-label Add --cancel-label Exit \
 	--checklist "Select the users enabled for the graphical environment:" \
 	0 0 0 \
 	2>&1 1>&5)
 exec 5>&-
-[ $? -ne $BSDDIALOG_OK -o -z "$USERS" ] && exit 0
+[ $? -ne $BSDDIALOG_OK -o -z "$users" ] && exit 0
 
 if [ $gpu != VESA -a $gpu != SCFB -a $gpu != VirtualBox ]; then
-	pw groupmod video -m `echo "$USERS" | tr ' ' ','`
+	pw groupmod video -m `echo "$users" | tr ' ' ','`
 fi
 
 if [ $gpu = VirtualBox ]; then
-	pw groupmod wheel -m `echo "$USERS" | tr ' ' ','`
+	pw groupmod wheel -m `echo "$users" | tr ' ' ','`
 	# Useful for poweroff(8). Is this script the right place for this setting?
 	if [ `sysctl -n machdep.bootmethod` = UEFI ]; then
 		echo "# VirtualBox setup" >> /boot/loader.conf
@@ -241,7 +241,7 @@ $4
 EOF
 }
 
-for u in $USERS; do
+for u in $users; do
 	user_home="$(pw usershow ${u} | awk -F: '{print $(NF-1)}')"
 	user_config_dir="/mnt/${user_home}/.config"
 	mkdir -p "${user_config_dir}/autostart"
@@ -265,5 +265,5 @@ done
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--msgbox "\nDesktop installation completed.\n\nThe SDDM display
 	manager will start automatically and allow graphical login at the next
-	startup. The enabled users with configured settings are: ${USERS}." \
+	startup. The enabled users with configured settings are: ${users}." \
 	0 0
