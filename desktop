@@ -48,8 +48,14 @@ readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-installerdriver.conf
 ####
 
 #### SECTION 1 ####
+QUESTION="FreeBSD provides a variety of graphical environments that can
+be easily installed through ports and packages. Refer to the FreeBSD
+Handbook available at \Zuhttps://docs.freebsd.org\Zn.\n\n
+Would you like to install the GPU drivers, Xorg, KDE Plasma, and SDDM
+now, and have them start automatically at the next system reboot?\n\n
+Please note this is an experimental feature."
 bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
-	--yesno "FreeBSD provides a variety of graphical environments that can be easily installed through ports and packages. Refer to the FreeBSD Handbook available at \Zuhttps://docs.freebsd.org\Zn.\n\nWould you like to install KDE Plasma now and start it at the next system reboot? Please note this is an experimental feature." 0 0
+	--yesno "$QUESTION" 0 0
 [ $? -ne $BSDDIALOG_YES ] && exit 1
 
 if [ -z "$(hostname)" ]; then
@@ -93,26 +99,26 @@ postconfig=""
 case $gpu in
 	DRM)
 		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
-		postconfig="echo kld_list=\\\"i915kms amdgpu radeonkms\\\" >> /etc/rc.conf"
+		postconfig="sysrc kld_list+=\"i915kms amdgpu radeonkms\""
 		;;
 	Optimus-Intel)
 		optimus=1
 		;&
 	Intel)
 		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
-		postconfig="echo kld_list=\\\"i915kms\\\" >> /etc/rc.conf"
+		postconfig="sysrc kld_list+=\"i915kms\""
 		;;
 	AMD)
 		toinstall="drm-kmod mesa-gallium-va libva-utils"
-		postconfig="echo kld_list=\\\"amdgpu\\\" >> /etc/rc.conf"
+		postconfig="sysrc kld_list+=\"amdgpu\""
 		;;
 	Radeon)
 		toinstall="drm-kmod mesa-gallium-va libva-utils"
-		postconfig="echo kld_list=\\\"radeonkms\\\" >> /etc/rc.conf"
+		postconfig="sysrc kld_list+=\"radeonkms\""
 		;;
 	VirtualBox)
 		toinstall="virtualbox-ose-additions"
-		postconfig="echo -e \"# VirtualBox setup\nvboxguest_enable=\\\"YES\\\"\nvboxservice_enable=\\\"YES\\\"\" >> /etc/rc.conf"
+		postconfig="sysrc vboxguest_enable=\"YES\" ; sysrc vboxservice_enable=\"YES\""
 		;;
 	VESA)
 		toinstall="xf86-video-vesa"
@@ -144,9 +150,10 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 	gpu=$(echo $items | xargs -o bsddialog --backtitle "$OSNAME Installer" \
 		--title Desktop --ok-label Install --cancel-label Exit \
 		--colors --hmsg "$HELPGPU" --item-prefix \
-		--radiolist "F1 to know your GPU and which driver supports it. SPACE to select a driver." \
+		--radiolist "F1 to know your GPU and which driver supports it.
+		SPACE to select a driver." \
 		0 0 0 \
-	3>&1 1>&2 2>&3 3>&-)
+		3>&1 1>&2 2>&3 3>&-)
 	[ $? -ne $BSDDIALOG_OK -o -z $gpu ] && exit 0
 
 	toinstall="$toinstall $gpu"
@@ -167,49 +174,52 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 
 	if [ $optimus ]; then
 		postconfig="$postconfig ; echo hw.nvidiadrm.modeset=\\\"1\\\" >> /boot/loader.conf"
-		postconfig="echo kld_list=\\\"i915kms $kmod\\\" >> /etc/rc.conf"
+		postconfig="$postconfig ; sysrc kld_list+=\"i915kms $kmod\""
 	else
-		postconfig="echo kld_list=\\\"$kmod\\\" >> /etc/rc.conf"
+		postconfig="sysrc kld_list+=\"$kmod\""
 	fi
 fi
 
 #### SECTION 3: Installation and Global Configuration ####
 ASSUME_ALWAYS_YES=yes pkg update
-pkg install $toinstall kde plasma6-plasma ly wireplumber xorg
+pkg install $toinstall kde plasma6-plasma sddm wireplumber xorg
 [ $? -ne 0 ] && exit 0
 
-bsddialog --backtitle "$OSNAME Installer" --title Desktop --infobox "Setting DE..." 0 0
+bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+	--infobox "Setting DE..." 0 0
 eval $postconfig
 echo "# KDE setup" >> /etc/rc.conf
 # sysrc(8) is not in a pkgbase minimal installation
-echo dbus_enable=\"YES\" >> /etc/rc.conf
+sysrc dbus_enable="YES"
 echo "# KDE setup" >> /etc/sysctl.conf
 echo "net.local.stream.recvspace=65536" >> /etc/sysctl.conf
 echo "net.local.stream.sendspace=65536" >> /etc/sysctl.conf
 
 if [ $gpu = VirtualBox ]; then
 	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--msgbox "VirtualBox setting: select VBoxSVGA as graphics controller, and disable 3D acceleration." \
+	--msgbox "VirtualBox setting: select VBoxSVGA as graphics controller,
+	 and disable 3D acceleration." \
 	0 0
 fi
-1
 
 #### SECTION 4: For User Configuration ####
-users=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
+USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
 
 exec 5>&1
-USERS=$(echo ${users} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
-	--title "Desktop" --ok-label Add --cancel-label Exit \
-	--checklist 'Select the users enabled for the graphical environment:' 0 0 0 2>&1 1>&5)
+users=$(echo ${USERS} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
+	--title Desktop --ok-label Add --cancel-label Exit \
+	--checklist "Select the users enabled for the graphical environment:" \
+	0 0 0 \
+	2>&1 1>&5)
 exec 5>&-
-[ $? -ne $BSDDIALOG_OK -o -z "$USERS" ] && exit 0
+[ $? -ne $BSDDIALOG_OK -o -z "$users" ] && exit 0
 
 if [ $gpu != VESA -a $gpu != SCFB -a $gpu != VirtualBox ]; then
-	pw groupmod video -m `echo "$USERS" | tr ' ' ','`
+	pw groupmod video -m `echo "$users" | tr ' ' ','`
 fi
 
 if [ $gpu = VirtualBox ]; then
-	pw groupmod wheel -m `echo "$USERS" | tr ' ' ','`
+	pw groupmod wheel -m `echo "$users" | tr ' ' ','`
 	# Useful for poweroff(8). Is this script the right place for this setting?
 	if [ `sysctl -n machdep.bootmethod` = UEFI ]; then
 		echo "# VirtualBox setup" >> /boot/loader.conf
@@ -242,7 +252,7 @@ $4
 EOF
 }
 
-for u in $USERS; do
+for u in $users; do
 	user_home="$(pw usershow ${u} | awk -F: '{print $(NF-1)}')"
 	user_config_dir="/mnt/${user_home}/.config"
 	mkdir -p "${user_config_dir}/autostart"
@@ -264,5 +274,7 @@ done
 
 #### SECTION 5: Success Message ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--msgbox "\nDesktop installation completed.\n\nThe Ly display manager will start automatically and allow text-based login at the next startup. The enabled users with configured settings are: ${USERS}." \
+	--msgbox "\nDesktop installation completed.\n\nThe Ly display
+	manager will start automatically and allow text-based login at the next
+	startup. The enabled users with configured settings are: ${users}." \
 	0 0
