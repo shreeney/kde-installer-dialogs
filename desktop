@@ -174,7 +174,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 
 	if [ $optimus ]; then
 		postconfig="$postconfig ; echo hw.nvidiadrm.modeset=\\\"1\\\" >> /boot/loader.conf"
-		postconfig="$postconfig ; sysrc kld_list+=\"i915kms $kmod\""
+		postconfig="sysrc kld_list+=\"i915kms $kmod\""
 	else
 		postconfig="sysrc kld_list+=\"$kmod\""
 	fi
