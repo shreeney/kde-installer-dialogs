@@ -199,7 +199,7 @@ echo "net.local.stream.sendspace=65536" >> /etc/sysctl.conf
 if [ $gpu = VirtualBox ]; then
 	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--msgbox "VirtualBox setting: select VBoxSVGA as graphics controller,
-	 and disable 3D acceleration." \
+	and disable 3D acceleration." \
 	0 0
 fi
 
