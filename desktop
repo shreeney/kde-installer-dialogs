@@ -186,7 +186,7 @@ pkg install $toinstall kde plasma6-plasma sddm wireplumber xorg
 [ $? -ne 0 ] && exit 0
 
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--infobox "Setting DE..." 0 0
+	--infobox "Create and update configuration files" 0 0
 eval $postconfig
 echo "# KDE setup" >> /etc/rc.conf
 # sysrc(8) is not in a pkgbase minimal installation
