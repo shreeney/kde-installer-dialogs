@@ -16,7 +16,7 @@ The script can be tested immediately after an installation or on an already inst
 
 ### Testing after installation (Live CD)
 
-1. Install FreeBSD. You may choose pkgbase (including minimal installation) or distribution extraction.
+1. Install FreeBSD. You may choose pkgbase (select `[X] base`) or distribution extraction.
 2. On the final screen, select “LIVE CD”.
 3. Run the following commands:
 ```
