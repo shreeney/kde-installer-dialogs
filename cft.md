@@ -1,13 +1,18 @@
 # Call for testing: KDE installation script
 
-The purpose of this script is to install and configure a graphical environment that starts automatically after reboot.
-At the moment, development is focused on: GPU, Xorg, KDE Plasma, and SDDM. Additional options may be added in the future.
+The purpose of this script is to install and configure a graphical environment
+that starts automatically after reboot.
+At the moment, development is focused on: GPU, Xorg, KDE Plasma, and SDDM.
+Additional options may be added in the future.
 
-**This script is still experimental, participate only if you are familiar with configuring and using FreeBSD.**
+**This script is still experimental, participate only if you are familiar with
+configuring and using FreeBSD.**
 
 ## Testing
 
-The script is intended to be integrated into bsdinstall, but it is currently in the testing phase and must be run after installation. The script can be tested immediately after an installation or on an already installed system.
+The script is intended to be integrated into bsdinstall, but it is currently in
+the testing phase and must be run after installation.
+The script can be tested immediately after an installation or on an already installed system.
 
 ### Testing after installation (Live CD)
 
@@ -34,12 +39,17 @@ Run the following commands:
  - If the script is executed multiple times, it duplicates configuration entries in `/etc/rc.conf` and `/boot/loader.conf`.
  - The script currently does not check whether options are already enabled.
 
-After installation, please manually verify both configuration files. This limitation will be addressed when the script is updated for integration with bsdinstall. More details are available [here](https://gitlab.com/alfix/kde-installer-dialogs/-/issues/20#note_3011254558).
+After installation, please manually verify both configuration files.
+This limitation will be addressed when the script is updated for integration
+with bsdinstall.
+More details are available [here](https://gitlab.com/alfix/kde-installer-dialogs/-/issues/20#note_3011254558).
 
 ## Reporting
 
-I am particularly interested in NVIDIA hardware testing, as I do not own a recent laptop with this hardware.
-[My laptop](https://wiki.freebsd.org/Laptops/Acer_Aspire_5742G) with NVIDIA Optimus dates back to 2011.
+I am particularly interested in NVIDIA hardware testing, as I do not own a
+recent laptop with this hardware.
+[My laptop](https://wiki.freebsd.org/Laptops/Acer_Aspire_5742G) with NVIDIA
+Optimus dates back to 2011.
 
 ### Successful test
 
