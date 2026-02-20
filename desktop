@@ -51,7 +51,7 @@ readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-installerdriver.conf
 QUESTION="FreeBSD provides a variety of graphical environments that can
 be easily installed through ports and packages. Refer to the FreeBSD
 Handbook available at \Zuhttps://docs.freebsd.org\Zn.\n\n
-Would you like to install the GPU drivers, Xorg, KDE Plasma, and Ly
+Would you like to install the GPU drivers, Xorg, KDE Plasma, and SDDM
 now, and have them start automatically at the next system reboot?\n\n
 Please note this is an experimental feature."
 bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
@@ -182,7 +182,7 @@ fi
 
 #### SECTION 3: Installation and Global Configuration ####
 ASSUME_ALWAYS_YES=yes pkg update
-pkg install $toinstall kde plasma6-plasma ly wireplumber xorg
+pkg install $toinstall kde plasma6-plasma sddm wireplumber xorg
 [ $? -ne 0 ] && exit 0
 
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
@@ -191,6 +191,7 @@ eval $postconfig
 echo "# KDE setup" >> /etc/rc.conf
 # sysrc(8) is not in a pkgbase minimal installation
 sysrc dbus_enable="YES"
+sysrc sddm_enable="YES"
 echo "# KDE setup" >> /etc/sysctl.conf
 echo "net.local.stream.recvspace=65536" >> /etc/sysctl.conf
 echo "net.local.stream.sendspace=65536" >> /etc/sysctl.conf
@@ -226,16 +227,6 @@ if [ $gpu = VirtualBox ]; then
 		echo "hw.efi.poweroff=0" >> /boot/loader.conf
 	fi
 fi
-# Setup Ly display manager
-cat << 'EOF' >> /etc/gettytab
-Ly:\
-:lo=/usr/local/bin/ly_wrapper:\
-:al=root:
-EOF
-
-sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 "/usr/libexec/getty Ly" xterm on secure|' /etc/ttys
-
-mv -f ./config.ini /usr/local/etc/ly/config.ini
 
 gen_autostart_entry() {
 	cat <<EOF
@@ -274,7 +265,7 @@ done
 
 #### SECTION 5: Success Message ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--msgbox "\nDesktop installation completed.\n\nThe Ly display
-	manager will start automatically and allow text-based login at the next
+	--msgbox "\nDesktop installation completed.\n\nThe SDDM display
+	manager will start automatically and allow graphical login at the next
 	startup. The enabled users with configured settings are: ${users}." \
 	0 0
