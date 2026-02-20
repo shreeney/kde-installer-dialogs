@@ -51,7 +51,7 @@ readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-installerdriver.conf
 QUESTION="FreeBSD provides a variety of graphical environments that can
 be easily installed through ports and packages. Refer to the FreeBSD
 Handbook available at \Zuhttps://docs.freebsd.org\Zn.\n\n
-Would you like to install the GPU drivers, Xorg, KDE Plasma, and SDDM
+Would you like to install the GPU drivers, Xorg, KDE Plasma, and Ly
 now, and have them start automatically at the next system reboot?\n\n
 Please note this is an experimental feature."
 bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
@@ -182,7 +182,7 @@ fi
 
 #### SECTION 3: Installation and Global Configuration ####
 ASSUME_ALWAYS_YES=yes pkg update
-pkg install $toinstall kde plasma6-plasma sddm wireplumber xorg
+pkg install $toinstall kde plasma6-plasma ly wireplumber xorg
 [ $? -ne 0 ] && exit 0
 
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
