@@ -187,14 +187,24 @@ pkg install $toinstall kde plasma6-plasma sddm wireplumber xorg
 
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--infobox "Create and update configuration files" 0 0
+
+# Delete the previous configurations if this script has been called before
+# using finalconfig menu script.
+# Is this really necessary? Does bsdinstall provide a reset or restart option?
+sysrc-=" i915kms amdgpu radeonkms nvidia-drm nvidia-modeset nvidia"
+rm -f $XDRIVERFILE
+sed -i '' '/hw.nvidiadrm.modeset="1"/d' /boot/loader.conf
+sed -i '' '/# VirtualBox setup/d' /boot/loader.conf
+sed -i '' '/hw.efi.poweroff=0/d' /boot/loader.conf
+
 eval $postconfig
-echo "# KDE setup" >> /etc/rc.conf
-# sysrc(8) is not in a pkgbase minimal installation
 sysrc dbus_enable="YES"
 sysrc sddm_enable="YES"
-echo "# KDE setup" >> /etc/sysctl.conf
-echo "net.local.stream.recvspace=65536" >> /etc/sysctl.conf
-echo "net.local.stream.sendspace=65536" >> /etc/sysctl.conf
+grep -qxF "# KDE setup" /etc/sysctl.conf || {
+	echo "# KDE setup";
+	echo "net.local.stream.recvspace=65536";
+	echo "net.local.stream.sendspace=65536";
+} >> /etc/sysctl.conf
 
 if [ $gpu = VirtualBox ]; then
 	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
@@ -223,8 +233,10 @@ if [ $gpu = VirtualBox ]; then
 	pw groupmod wheel -m `echo "$users" | tr ' ' ','`
 	# Useful for poweroff(8). Is this script the right place for this setting?
 	if [ `sysctl -n machdep.bootmethod` = UEFI ]; then
-		echo "# VirtualBox setup" >> /boot/loader.conf
-		echo "hw.efi.poweroff=0" >> /boot/loader.conf
+		{ 
+			echo "# VirtualBox setup";
+			echo "hw.efi.poweroff=0";
+		} >> /boot/loader.conf
 	fi
 fi
 
