@@ -82,6 +82,7 @@ HELPGPU="\ZbSystem firmware boot method\Zn: $BOOTMETHOD
 
 # TODO: add auto detection, via pciconf -lv and fwget -n -q
 # TODO: check boot method to show only vesa or scfb
+# TODO: check virtual machine
 gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--ok-label Install --cancel-label Exit \
 	--colors --hmsg "$HELPGPU" --item-depth \
