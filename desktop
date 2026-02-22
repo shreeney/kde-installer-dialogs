@@ -37,7 +37,7 @@ readonly BSDDIALOG_OK=0
 readonly BSDDIALOG_YES=$BSDDIALOG_OK
 readonly BSDDIALOG_NO=1
 
-readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-installerdriver.conf
+readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
 
 ####
 # 1. Yes-No question and Checks.
