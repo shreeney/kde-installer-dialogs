@@ -74,10 +74,7 @@ BOOTMETHOD=`sysctl -n machdep.bootmethod`
 GPU=`pciconf -lv | grep -A 4 vga`
 # F1 help message
 HELPGPU="\ZbSystem firmware boot method\Zn: $BOOTMETHOD
-
-\ZbGPU\Zn:
-$GPU
-
+\ZbGPU\Zn: $GPU
 \ZbDetected firmware package\Zn: $PKGGPU"
 # end F1 help message
 
