@@ -97,7 +97,7 @@ else
 	[ $BOOTMETHOD == BIOS ] && vesa=on || scfb=on
 fi
 gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--ok-label Install --cancel-label Exit \
+	--ok-label Continue \
 	--colors --hmsg "$HELPGPU" --item-depth \
 	--radiolist "F1 to know your GPU, SPACE to select a driver:" 0 0 0 \
 	0 DRM           "Intel and AMD Metaport"                         off \
@@ -167,7 +167,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 	Untested nvidia-driver-304 'Old proprietary driver version 304' off"
 
 	gpu=$(echo $items | xargs -o bsddialog --backtitle "$OSNAME Installer" \
-		--title Desktop --ok-label Install --cancel-label Exit \
+		--title Desktop --ok-label Continue \
 		--colors --hmsg "$HELPGPU" --item-prefix \
 		--radiolist "F1 to know your GPU and which driver supports it.
 		SPACE to select a driver." \
@@ -238,7 +238,7 @@ USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print
 
 exec 5>&1
 users=$(echo ${USERS} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
-	--title Desktop --ok-label Close --no-cancel \
+	--title Desktop --ok-label Continue \
 	--checklist "SPACE to select the users enabled for the graphical environment:" \
 	0 0 0 \
 	2>&1 1>&5)
