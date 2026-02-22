@@ -82,7 +82,6 @@ HELPGPU="\ZbSystem firmware boot method\Zn: $BOOTMETHOD
 
 # TODO: add auto detection, via pciconf -lv and fwget -n -q
 # TODO: check boot method to show only vesa or scfb
-# TODO: check virtual machine, sysctl kern.vm_guest=vbox
 if [ `sysctl -n kern.vm_guest` = vbox ]; then
 	virtualbox=on
 fi
