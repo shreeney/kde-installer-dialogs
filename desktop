@@ -225,8 +225,8 @@ USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print
 
 exec 5>&1
 users=$(echo ${USERS} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
-	--title Desktop --ok-label Add --cancel-label Exit \
-	--checklist "Select the users enabled for the graphical environment:" \
+	--title Desktop --ok-label Close --no-cancel \
+	--checklist "SPACE to select the users enabled for the graphical environment:" \
 	0 0 0 \
 	2>&1 1>&5)
 exec 5>&-
