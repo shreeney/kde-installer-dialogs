@@ -81,9 +81,10 @@ HELPGPU="\ZbSystem firmware boot method\Zn: $BOOTMETHOD
 # end F1 help message
 
 # TODO: add auto detection, via pciconf -lv and fwget -n -q
-# TODO: check boot method to show only vesa or scfb
 if [ `sysctl -n kern.vm_guest` = vbox ]; then
 	virtualbox=on
+elif [ -z $PKGGPU ]; then
+	[ $BOOTMETHOD == BIOS ] && vesa=on || scfb=on
 fi
 gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--ok-label Install --cancel-label Exit \
@@ -96,8 +97,8 @@ gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	0 NVIDIA        "Proprietary driver "                            off \
 	1 Optimus-Intel "Nvidia Optimus and Intel GPU"                   off \
 	0 VirtualBox    "Oracle VirtualBox."                             ${virtualbox-off} \
-	0 VESA          "GPU not supported by other drivers (BIOS)"      off \
-	0 SCFB          "GPU not supported by other drivers (UEFI)"      off \
+	0 VESA          "GPU not supported by other drivers (BIOS)"      ${vesa-off} \
+	0 SCFB          "GPU not supported by other drivers (UEFI)"      ${scfb-off} \
 	3>&1 1>&2 2>&3 3>&-)
 [ $? -ne $BSDDIALOG_OK ] && exit 1
 [ -z $gpu ] && exit 0
