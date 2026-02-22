@@ -71,19 +71,29 @@ fi
 #### SECTION 2: Select GPU ####
 PKGGPU=`fwget -n -q | grep gpu`
 BOOTMETHOD=`sysctl -n machdep.bootmethod`
+GPU=`pciconf -lv | grep -A 4 vga`
 # F1 help message
 HELPGPU="\ZbSystem firmware boot method\Zn: $BOOTMETHOD
 
 \ZbGPU\Zn:
-`pciconf -lv | grep -A 4 vga`
+$GPU
 
 \ZbDetected firmware package\Zn: $PKGGPU"
 # end F1 help message
 
-# TODO: add auto detection, via pciconf -lv and fwget -n -q
 if [ `sysctl -n kern.vm_guest` = vbox ]; then
 	virtualbox=on
-elif [ -z $PKGGPU ]; then
+elif [ "${GPU#*NVIDIA}" != "$GPU" -a "${PKGGPU#*intel}" != "$PKGGPU" ]; then
+	optimus=on
+elif [ "${GPU#*NVIDIA}" != "$GPU" ]; then
+	nvidia=on
+elif [ "${PKGGPU#*intel}" != "$PKGGPU" ]; then
+	intel=on
+elif [ "${PKGGPU#*amd}" != "$PKGGPU" ]; then
+	amd=on
+elif [ "${PKGGPU#*radeon}" != "$PKGGPU" ]; then
+	radeon=on
+else
 	[ $BOOTMETHOD == BIOS ] && vesa=on || scfb=on
 fi
 gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
@@ -91,11 +101,11 @@ gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--colors --hmsg "$HELPGPU" --item-depth \
 	--radiolist "F1 to know your GPU, SPACE to select a driver:" 0 0 0 \
 	0 DRM           "Intel and AMD Metaport"                         off \
-	1 Intel         "Intel APUs starting with HD3000 / Sandy Bridge" off \
-	1 AMD           "AMD GPUs starting with HD7000 / Tahiti"         off \
-	1 Radeon        "Older AMD GPUs (EFI boot should be disabled)"   off \
-	0 NVIDIA        "Proprietary driver "                            off \
-	1 Optimus-Intel "Nvidia Optimus and Intel GPU"                   off \
+	1 Intel         "Intel APUs starting with HD3000 / Sandy Bridge" ${intel-off} \
+	1 AMD           "AMD GPUs starting with HD7000 / Tahiti"         ${amd-off} \
+	1 Radeon        "Older AMD GPUs (EFI boot should be disabled)"   ${radeon-off} \
+	0 NVIDIA        "Proprietary driver "                            ${nvidia-off} \
+	1 Optimus-Intel "Nvidia Optimus and Intel GPU"                   ${optimus-off} \
 	0 VirtualBox    "Oracle VirtualBox."                             ${virtualbox-off} \
 	0 VESA          "GPU not supported by other drivers (BIOS)"      ${vesa-off} \
 	0 SCFB          "GPU not supported by other drivers (UEFI)"      ${scfb-off} \
