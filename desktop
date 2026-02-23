@@ -37,17 +37,18 @@ readonly BSDDIALOG_OK=0
 readonly BSDDIALOG_YES=$BSDDIALOG_OK
 readonly BSDDIALOG_NO=1
 
-readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-installerdriver.conf
+readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
 
 ####
-# 1. Yes-No question to install KDE.
-# 2. Radiolist GPU.
-# 3. Installation and Global Configuration.
-# 4. Checklist and Configuration for users.
-# 5. Success message.
+# 1. Yes-No question and Checks.
+# 2. Select GPU driver.
+# 3. Installation.
+# 4. Global Configuration.
+# 5. Configuration for users.
+# 6. Success message.
 ####
 
-#### SECTION 1 ####
+#### SECTION 1: Yes-No question and Checks ####
 QUESTION="FreeBSD provides a variety of graphical environments that can
 be easily installed through ports and packages. Refer to the FreeBSD
 Handbook available at \Zuhttps://docs.freebsd.org\Zn.\n\n
@@ -64,32 +65,47 @@ if [ -z "$(hostname)" ]; then
 	exit 1
 fi
 
-#### SECTION 2: Graphic card ####
+# TODO: check arch for gpu drivers.
+# TODO: check CURRENT for available packages.
+
+#### SECTION 2: Select GPU ####
 PKGGPU=`fwget -n -q | grep gpu`
 BOOTMETHOD=`sysctl -n machdep.bootmethod`
-# F1 help message...
+GPU=`pciconf -lv | grep -A 4 vga`
+# F1 help message
 HELPGPU="\ZbSystem firmware boot method\Zn: $BOOTMETHOD
-
-\ZbGPU\Zn:
-`pciconf -lv | grep -A 4 vga`
-
+\ZbGPU\Zn: $GPU
 \ZbDetected firmware package\Zn: $PKGGPU"
-# ...end F1 help message
+# end F1 help message
 
-# TODO: add auto detection, via pciconf -lv and fwget -n -q
+if [ `sysctl -n kern.vm_guest` = vbox ]; then
+	virtualbox=on
+elif [ "${GPU#*NVIDIA}" != "$GPU" -a "${PKGGPU#*intel}" != "$PKGGPU" ]; then
+	optimus=on
+elif [ "${GPU#*NVIDIA}" != "$GPU" ]; then
+	nvidia=on
+elif [ "${PKGGPU#*intel}" != "$PKGGPU" ]; then
+	intel=on
+elif [ "${PKGGPU#*amd}" != "$PKGGPU" ]; then
+	amd=on
+elif [ "${PKGGPU#*radeon}" != "$PKGGPU" ]; then
+	radeon=on
+else
+	[ $BOOTMETHOD == BIOS ] && vesa=on || scfb=on
+fi
 gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--ok-label Install --cancel-label Exit \
+	--ok-label Continue \
 	--colors --hmsg "$HELPGPU" --item-depth \
 	--radiolist "F1 to know your GPU, SPACE to select a driver:" 0 0 0 \
 	0 DRM           "Intel and AMD Metaport"                         off \
-	1 Intel         "Intel APUs starting with HD3000 / Sandy Bridge" off \
-	1 AMD           "AMD GPUs starting with HD7000 / Tahiti"         off \
-	1 Radeon        "Older AMD GPUs (EFI boot should be disabled)"   off \
-	0 NVIDIA        "Proprietary driver "                            off \
-	1 Optimus-Intel "Nvidia Optimus and Intel GPU"                   off \
-	0 VirtualBox    "Oracle VirtualBox. Work In Progress!"           off \
-	0 VESA          "GPU not supported by other drivers (BIOS)"      off \
-	0 SCFB          "GPU not supported by other drivers (UEFI)"      off \
+	1 Intel         "Intel APUs starting with HD3000 / Sandy Bridge" ${intel-off} \
+	1 AMD           "AMD GPUs starting with HD7000 / Tahiti"         ${amd-off} \
+	1 Radeon        "Older AMD GPUs (EFI boot should be disabled)"   ${radeon-off} \
+	0 NVIDIA        "Proprietary driver "                            ${nvidia-off} \
+	1 Optimus-Intel "Nvidia Optimus and Intel GPU"                   ${optimus-off} \
+	0 VirtualBox    "Oracle VirtualBox."                             ${virtualbox-off} \
+	0 VESA          "GPU not supported by other drivers (BIOS)"      ${vesa-off} \
+	0 SCFB          "GPU not supported by other drivers (UEFI)"      ${scfb-off} \
 	3>&1 1>&2 2>&3 3>&-)
 [ $? -ne $BSDDIALOG_OK ] && exit 1
 [ -z $gpu ] && exit 0
@@ -122,11 +138,11 @@ case $gpu in
 		;;
 	VESA)
 		toinstall="xf86-video-vesa"
-		postconfig="printf 'Section Device\n\tIdentifier \"Card0\"\n\tDriver \"vesa\"\nEndSection' >> $XDRIVERFILE"
+		postconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"vesa\"\nEndSection' >> $XDRIVERFILE"
 		;;
 	SCFB)
 		toinstall="xf86-video-scfb"
-		postconfig="printf 'Section Device\n\tIdentifier \"Card0\"\n\tDriver \"scfb\"\nEndSection' >> $XDRIVERFILE"
+		postconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"scfb\"\nEndSection' >> $XDRIVERFILE"
 		;;
 esac
 
@@ -148,7 +164,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 	Untested nvidia-driver-304 'Old proprietary driver version 304' off"
 
 	gpu=$(echo $items | xargs -o bsddialog --backtitle "$OSNAME Installer" \
-		--title Desktop --ok-label Install --cancel-label Exit \
+		--title Desktop --ok-label Continue \
 		--colors --hmsg "$HELPGPU" --item-prefix \
 		--radiolist "F1 to know your GPU and which driver supports it.
 		SPACE to select a driver." \
@@ -180,21 +196,32 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 	fi
 fi
 
-#### SECTION 3: Installation and Global Configuration ####
+#### SECTION 3: Installation ####
 ASSUME_ALWAYS_YES=yes pkg update
 pkg install $toinstall kde plasma6-plasma sddm wireplumber xorg
 [ $? -ne 0 ] && exit 0
 
+#### SECTION 4: Global Configuration ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--infobox "Create and update configuration files" 0 0
+
+# Delete the previous configurations if this script has been called before
+# using finalconfig menu script.
+# Is this really necessary? Does bsdinstall provide a reset or restart option?
+sysrc-=" i915kms amdgpu radeonkms nvidia-drm nvidia-modeset nvidia"
+rm -f $XDRIVERFILE
+sed -i '' '/hw.nvidiadrm.modeset="1"/d' /boot/loader.conf
+sed -i '' '/# VirtualBox setup/d' /boot/loader.conf
+sed -i '' '/hw.efi.poweroff=0/d' /boot/loader.conf
+
 eval $postconfig
-echo "# KDE setup" >> /etc/rc.conf
-# sysrc(8) is not in a pkgbase minimal installation
 sysrc dbus_enable="YES"
 sysrc sddm_enable="YES"
-echo "# KDE setup" >> /etc/sysctl.conf
-echo "net.local.stream.recvspace=65536" >> /etc/sysctl.conf
-echo "net.local.stream.sendspace=65536" >> /etc/sysctl.conf
+grep -qxF "# KDE setup" /etc/sysctl.conf || {
+	echo "# KDE setup";
+	echo "net.local.stream.recvspace=65536";
+	echo "net.local.stream.sendspace=65536";
+} >> /etc/sysctl.conf
 
 if [ $gpu = VirtualBox ]; then
 	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
@@ -203,13 +230,13 @@ if [ $gpu = VirtualBox ]; then
 	0 0
 fi
 
-#### SECTION 4: For User Configuration ####
+#### SECTION 5: For User Configuration ####
 USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
 
 exec 5>&1
 users=$(echo ${USERS} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
-	--title Desktop --ok-label Add --cancel-label Exit \
-	--checklist "Select the users enabled for the graphical environment:" \
+	--title Desktop --ok-label Continue \
+	--checklist "SPACE to select the users enabled for the graphical environment:" \
 	0 0 0 \
 	2>&1 1>&5)
 exec 5>&-
@@ -223,8 +250,10 @@ if [ $gpu = VirtualBox ]; then
 	pw groupmod wheel -m `echo "$users" | tr ' ' ','`
 	# Useful for poweroff(8). Is this script the right place for this setting?
 	if [ `sysctl -n machdep.bootmethod` = UEFI ]; then
-		echo "# VirtualBox setup" >> /boot/loader.conf
-		echo "hw.efi.poweroff=0" >> /boot/loader.conf
+		{ 
+			echo "# VirtualBox setup";
+			echo "hw.efi.poweroff=0";
+		} >> /boot/loader.conf
 	fi
 fi
 
@@ -263,7 +292,7 @@ for u in $users; do
 	chown -R ${u}:${u} "${user_config_dir}"
 done
 
-#### SECTION 5: Success Message ####
+#### SECTION 6: Success Message ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--msgbox "\nDesktop installation completed.\n\nThe SDDM display
 	manager will start automatically and allow graphical login at the next
