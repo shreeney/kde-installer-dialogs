@@ -190,7 +190,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 
 	if [ $optimus ]; then
 		postconfig="$postconfig ; echo hw.nvidiadrm.modeset=\\\"1\\\" >> /boot/loader.conf"
-		postconfig="sysrc kld_list+=\"i915kms $kmod\""
+		postconfig="$postconfig ; sysrc kld_list+=\"i915kms $kmod\""
 	else
 		postconfig="sysrc kld_list+=\"$kmod\""
 	fi
@@ -198,7 +198,7 @@ fi
 
 #### SECTION 3: Installation ####
 ASSUME_ALWAYS_YES=yes pkg update
-pkg install $toinstall kde plasma6-plasma sddm wireplumber xorg
+pkg install $toinstall kde plasma6-plasma ly wireplumber xorg
 [ $? -ne 0 ] && exit 0
 
 #### SECTION 4: Global Configuration ####
@@ -216,7 +216,6 @@ sed -i '' '/hw.efi.poweroff=0/d' /boot/loader.conf
 
 eval $postconfig
 sysrc dbus_enable="YES"
-sysrc sddm_enable="YES"
 grep -qxF "# KDE setup" /etc/sysctl.conf || {
 	echo "# KDE setup";
 	echo "net.local.stream.recvspace=65536";
@@ -231,6 +230,7 @@ if [ $gpu = VirtualBox ]; then
 fi
 
 #### SECTION 5: For User Configuration ####
+
 USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
 
 exec 5>&1
@@ -257,6 +257,16 @@ if [ $gpu = VirtualBox ]; then
 	fi
 fi
 
+# Setup Ly display manager
+cat << 'EOF' >> /etc/gettytab
+Ly:\
+:lo=/usr/local/bin/ly_wrapper:\
+:al=root:
+EOF
+
+sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 "/usr/libexec/getty Ly" xterm on secure|' /etc/ttys
+
+mv -f ./config.ini /usr/local/etc/ly/config.ini
 gen_autostart_entry() {
 	cat <<EOF
 [Desktop Entry]
@@ -294,7 +304,7 @@ done
 
 #### SECTION 6: Success Message ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--msgbox "\nDesktop installation completed.\n\nThe SDDM display
-	manager will start automatically and allow graphical login at the next
+	--msgbox "\nDesktop installation completed.\n\nThe Ly display
+	manager will start automatically and allow text-based login at the next
 	startup. The enabled users with configured settings are: ${users}." \
 	0 0
